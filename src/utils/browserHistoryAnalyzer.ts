@@ -54,6 +54,19 @@ export class BrowserHistoryAnalyzer {
   constructor(data: any) {
     console.log('Raw data keys:', Object.keys(data || {}))
     console.log('Data structure preview:', data)
+    
+    // Special handling for Browser History structure
+    if (data && data["Browser History"]) {
+      console.log('Browser History structure:', typeof data["Browser History"])
+      console.log('Browser History keys:', Object.keys(data["Browser History"] || {}))
+      if (typeof data["Browser History"] === 'object' && !Array.isArray(data["Browser History"])) {
+        console.log('Browser History nested structure detected')
+        for (const [key, value] of Object.entries(data["Browser History"])) {
+          console.log(`  ${key}:`, Array.isArray(value) ? `Array[${value.length}]` : typeof value)
+        }
+      }
+    }
+    
     this.visits = this.parseVisits(data)
     console.log('Parsed visits count:', this.visits.length)
     if (this.visits.length > 0) {
@@ -75,6 +88,25 @@ export class BrowserHistoryAnalyzer {
       visits = data.data
     } else if (data["Browser History"] && Array.isArray(data["Browser History"])) {
       visits = data["Browser History"]
+    } else if (data["Browser History"] && typeof data["Browser History"] === 'object') {
+      // Handle nested Browser History object
+      const browserHistory = data["Browser History"]
+      if (Array.isArray(browserHistory.visits)) {
+        visits = browserHistory.visits
+      } else if (Array.isArray(browserHistory.data)) {
+        visits = browserHistory.data
+      } else if (Array.isArray(browserHistory.history)) {
+        visits = browserHistory.history
+      } else {
+        // Try to find any array in the Browser History object
+        for (const [key, value] of Object.entries(browserHistory)) {
+          if (Array.isArray(value) && value.length > 0) {
+            console.log(`Found visits array in Browser History.${key}:`, value.length, 'items')
+            visits = value
+            break
+          }
+        }
+      }
     } else if (data.Browser && data.Browser.History && Array.isArray(data.Browser.History)) {
       visits = data.Browser.History
     } else if (data.History && Array.isArray(data.History)) {
@@ -108,6 +140,11 @@ export class BrowserHistoryAnalyzer {
       visits = findVisits(data)
     }
 
+    console.log('Raw visits found:', visits.length)
+    if (visits.length > 0) {
+      console.log('Sample raw visit:', visits[0])
+      console.log('Visit keys:', Object.keys(visits[0] || {}))
+    }
     return visits.map(visit => {
       // Handle Chrome's specific timestamp format
       const visitTime = visit.last_visit_time || 
@@ -118,6 +155,8 @@ export class BrowserHistoryAnalyzer {
                        visit.date ||
                        visit.lastVisitTime ||
                        visit.last_visit ||
+                       visit.visit_date ||
+                       visit.access_time ||
                        Date.now()
       
       return {
