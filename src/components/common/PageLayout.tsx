@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { DropZone } from '@/components/common/DropZone'
 import { useDataStore } from '@/store/dataStore'
 import { ParsedData } from '@/types'
+import { cn } from '@/lib/utils'
 
 interface PageLayoutProps {
   pageId: string
@@ -33,6 +34,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const currentData = getPageData(pageId)
   const deviceData = getPageData('deviceInfo') // Get device info data for browser history page
   const [showUpload, setShowUpload] = React.useState(false)
+  const [isTransitioning, setIsTransitioning] = React.useState(false)
 
   // Load data from IndexedDB when component mounts
   useEffect(() => {
@@ -55,6 +57,24 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
   const handleDebugJson = (data: ParsedData) => {
     navigate('/debug-json', { state: { data } })
+  }
+
+  const handleShowUpload = () => {
+    setIsTransitioning(true)
+    // Small delay to allow transition to start
+    setTimeout(() => {
+      setShowUpload(true)
+      setIsTransitioning(false)
+    }, 150)
+  }
+
+  const handleBackToCharts = () => {
+    setIsTransitioning(true)
+    // Small delay to allow transition to start
+    setTimeout(() => {
+      setShowUpload(false)
+      setIsTransitioning(false)
+    }, 150)
   }
 
   const renderFileAccordion = (data: ParsedData, dataPageId: string, fileTitle: string, fileDescription: string) => (
@@ -136,7 +156,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowUpload(false)}
+                onClick={handleBackToCharts}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -148,12 +168,15 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           
           {/* File status in same row as title */}
           {hasAnyData && (
-            <div className="flex items-center gap-3">
+            <div className={cn(
+              "flex items-center gap-3 transition-all duration-300 ease-in-out",
+              isTransitioning && "opacity-50 transform translate-x-4"
+            )}>
               {/* Main data file status */}
               {currentData && (
                 <div 
-                  className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
-                  onClick={() => setShowUpload(true)}
+                  className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-all duration-200 hover:scale-105"
+                  onClick={handleShowUpload}
                   title="Click to upload new data"
                 >
                   <CheckCircle className="h-4 w-4 text-green-600" />
@@ -193,8 +216,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               {/* Device info status for browser history page - show if exists OR if no device data but has browser data */}
               {pageId === 'browserHistory' && deviceData && (
                 <div 
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
-                  onClick={() => setShowUpload(true)}
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-all duration-200 hover:scale-105"
+                  onClick={handleShowUpload}
                   title="Click to upload new device data"
                 >
                   <Smartphone className="h-4 w-4 text-blue-600" />
@@ -234,8 +257,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               {/* Show device upload option for browser history page when no device data but has browser data */}
               {pageId === 'browserHistory' && currentData && !deviceData && (
                 <div 
-                  className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-colors"
-                  onClick={() => setShowUpload(true)}
+                  className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-all duration-200 hover:scale-105"
+                  onClick={handleShowUpload}
                   title="Click to upload device data for enhanced analysis"
                 >
                   <Smartphone className="h-4 w-4 text-yellow-600" />
@@ -252,11 +275,14 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           
           {/* Show upload options when no data exists - for browser history page specifically */}
           {!hasAnyData && pageId === 'browserHistory' && (
-            <div className="flex items-center gap-3">
+            <div className={cn(
+              "flex items-center gap-3 transition-all duration-300 ease-in-out",
+              isTransitioning && "opacity-50 transform translate-x-4"
+            )}>
               {/* Browser data upload - primary */}
               <div 
-                className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
-                onClick={() => setShowUpload(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-all duration-200 hover:scale-105"
+                onClick={handleShowUpload}
                 title="Click to upload browser history data"
               >
                 <Database className="h-4 w-4 text-blue-600" />
@@ -270,8 +296,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               
               {/* Device data upload - secondary */}
               <div 
-                className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-colors"
-                onClick={() => setShowUpload(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-all duration-200 hover:scale-105"
+                onClick={handleShowUpload}
                 title="Click to upload device data for enhanced analysis"
               >
                 <Smartphone className="h-4 w-4 text-yellow-600" />
@@ -290,16 +316,23 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       </div>
 
       {!hasAnyData || showUpload ? (
-        <div className="space-y-6">
+        <div className={cn(
+          "space-y-6 transition-all duration-500 ease-in-out",
+          showUpload ? "opacity-100 transform translate-y-0" : "opacity-100 transform translate-y-0",
+          isTransitioning && !showUpload && "opacity-0 transform translate-y-4"
+        )}>
           {/* No data state - show click to upload message */}
           {!hasAnyData && (
             <Card 
-              className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors"
-              onClick={() => setShowUpload(true)}
+              className={cn(
+                "border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg",
+                isTransitioning && "opacity-50 transform scale-95"
+              )}
+              onClick={handleShowUpload}
             >
               <CardContent className="flex items-center justify-center py-12 text-center">
                 <div>
-                  <Database className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <Database className="h-12 w-12 text-primary mx-auto mb-4 transition-transform duration-300 hover:scale-110" />
                   <CardTitle className="mb-2 text-primary">No data uploaded</CardTitle>
                   <CardDescription className="mb-4">
                     Click here to upload your {title.toLowerCase()} data and start exploring insights
@@ -314,8 +347,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           
           {/* Show formats and examples when no data or in upload mode */}
           {(!hasAnyData && showUpload) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
+            <div className={cn(
+              "grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-500 ease-in-out",
+              showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
+            )}>
+              <Card className="transition-all duration-300 hover:shadow-md">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Database className="h-5 w-5 text-primary" />
@@ -328,7 +364,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {acceptedFormats.map((format) => (
-                      <Badge key={format} variant="secondary" className="text-sm">
+                      <Badge key={format} variant="secondary" className="text-sm transition-all duration-200 hover:scale-105">
                         {format}
                       </Badge>
                     ))}
@@ -336,7 +372,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="transition-all duration-300 hover:shadow-md">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-600" />
@@ -349,7 +385,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                 <CardContent>
                   <ul className="space-y-2">
                     {examples.map((example, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
+                      <li key={index} className="flex items-start gap-2 text-sm transition-all duration-200 hover:translate-x-1">
                         <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
                         <span>{example}</span>
                       </li>
@@ -362,19 +398,28 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           
           {/* Show upload interface when no data and showUpload is true, or when data exists and showUpload is true */}
           {((!hasAnyData && showUpload) || (hasAnyData && showUpload)) && (
-            <>
+            <div className={cn(
+              "transition-all duration-500 ease-in-out",
+              showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
+            )}>
               <DropZone 
                 pageId={pageId}
                 customTitle={pageId === 'browserHistory' ? 'Upload Browser History Data' : undefined}
                 customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
               />
               {additionalUpload}
-            </>
+            </div>
           )}
         </div>
       ) : (
         // Show charts when data exists and not in upload mode
-        children
+        <div className={cn(
+          "transition-all duration-500 ease-in-out",
+          !showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-4",
+          isTransitioning && showUpload && "opacity-50 transform scale-95"
+        )}>
+          {children}
+        </div>
       )}
     </div>
   )
