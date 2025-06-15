@@ -126,9 +126,12 @@ export const PlaystoreAppsCharts: React.FC = () => {
       count > max.count ? { year, count } : max, { year: 0, count: 0 }
     )
 
-    const oldestApp = processedData.installs.reduce((oldest, app) => 
-      app.firstInstall < oldest.firstInstall ? app : oldest
-    )
+    // Fix: Add guard for empty array and provide initial value
+    const oldestApp = processedData.installs.length > 0 
+      ? processedData.installs.reduce((oldest, app) => 
+          app.firstInstall < oldest.firstInstall ? app : oldest
+        )
+      : { title: 'N/A' }
 
     const uniqueDevices = new Set(processedData.devices.map(d => `${d.manufacturer} ${d.model}`)).size
 
@@ -389,7 +392,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
                       const count = processedData.installs.filter(app => 
                         app.title.toLowerCase().includes(category.toLowerCase())
                       ).length
-                      const percentage = (count / processedData.installs.length) * 100
+                      const percentage = processedData.installs.length > 0 ? (count / processedData.installs.length) * 100 : 0
                       
                       return (
                         <div key={category} className="flex items-center justify-between">
@@ -617,32 +620,41 @@ export const PlaystoreAppsCharts: React.FC = () => {
                 <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                   <p className="text-sm font-medium text-green-700 dark:text-green-300">🚀 Peak Install Day</p>
                   <p className="text-lg font-bold text-green-900 dark:text-green-100">
-                    {processedData.installs
-                      .reduce((acc: any, install) => {
+                    {(() => {
+                      if (processedData.installs.length === 0) return 'N/A'
+                      const installsByDate = processedData.installs.reduce((acc: any, install) => {
                         const date = install.firstInstall.toDateString()
                         acc[date] = (acc[date] || 0) + 1
                         return acc
                       }, {})
-                      > (data => Object.entries(data).reduce((max: any, [date, count]: any) => 
+                      const peakDay = Object.entries(installsByDate).reduce((max: any, [date, count]: any) => 
                         count > max.count ? { date, count } : max, { date: 'N/A', count: 0 }
-                      ).date)
-                    }
+                      )
+                      return peakDay.date
+                    })()}
                   </p>
                 </div>
 
                 <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
                   <p className="text-sm font-medium text-purple-700 dark:text-purple-300">🔄 Most Updated App</p>
                   <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
-                    {processedData.installs
-                      .filter(app => (app.lastUpdate.getTime() - app.firstInstall.getTime()) > 0)
-                      .sort((a, b) => (b.lastUpdate.getTime() - b.firstInstall.getTime()) - (a.lastUpdate.getTime() - a.firstInstall.getTime()))[0]?.title || 'N/A'}
+                    {(() => {
+                      const updatedApps = processedData.installs
+                        .filter(app => (app.lastUpdate.getTime() - app.firstInstall.getTime()) > 0)
+                      if (updatedApps.length === 0) return 'N/A'
+                      return updatedApps
+                        .sort((a, b) => (b.lastUpdate.getTime() - b.firstInstall.getTime()) - (a.lastUpdate.getTime() - a.firstInstall.getTime()))[0]?.title || 'N/A'
+                    })()}
                   </p>
                 </div>
 
                 <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
                   <p className="text-sm font-medium text-orange-700 dark:text-orange-300">💰 Biggest Single Purchase</p>
                   <p className="text-lg font-bold text-orange-900 dark:text-orange-100">
-                    ₹{Math.max(...processedData.orders.map(o => parseFloat(o.totalPrice.replace(/[₹,]/g, '') || '0'))).toFixed(2)}
+                    ₹{processedData.orders.length > 0 
+                      ? Math.max(...processedData.orders.map(o => parseFloat(o.totalPrice.replace(/[₹,]/g, '') || '0'))).toFixed(2)
+                      : '0.00'
+                    }
                   </p>
                 </div>
               </CardContent>
