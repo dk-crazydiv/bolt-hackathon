@@ -3,10 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   Globe, Clock, TrendingUp, BarChart3, PieChart, Calendar, Activity, 
   Star, Bookmark, Search, Timer, MapPin, Zap, Target, Award,
-  MousePointer, Eye, Heart, Flame, Trophy, Sparkles
+  MousePointer, Eye, Heart, Flame, Trophy, Sparkles, Users, Layers
 } from 'lucide-react'
 import { useDataStore } from '@/store/dataStore'
 import { BrowserHistoryAnalyzer, BrowserAnalytics } from '@/utils/browserHistoryAnalyzer'
@@ -24,7 +25,11 @@ import {
   LineChart,
   Line,
   Area,
-  AreaChart
+  AreaChart,
+  ComposedChart,
+  Legend,
+  ScatterChart,
+  Scatter
 } from 'recharts'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C']
@@ -71,6 +76,7 @@ export const BrowserHistoryCharts: React.FC = () => {
   const data = getPageData('browserHistory')
   const [activeTab, setActiveTab] = useState('tiles')
   const [selectedInsight, setSelectedInsight] = useState<string | null>(null)
+  const [selectedTimeUrl, setSelectedTimeUrl] = useState<string>('')
 
   const analytics: BrowserAnalytics | null = useMemo(() => {
     if (!data) return null
@@ -290,6 +296,10 @@ export const BrowserHistoryCharts: React.FC = () => {
           <TabsTrigger value="patterns" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Patterns
+          </TabsTrigger>
+          <TabsTrigger value="time-analysis" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Time Analysis
           </TabsTrigger>
         </TabsList>
 
@@ -531,51 +541,30 @@ export const BrowserHistoryCharts: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Session Duration Distribution</CardTitle>
-                <CardDescription>How long your browsing sessions typically last</CardDescription>
+                <CardTitle>📊 Browsing Sessions Over Time</CardTitle>
+                <CardDescription>Number of browsing sessions and average session length per day</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={
-                    (() => {
-                      // Create meaningful duration buckets
-                      const buckets = [
-                        { label: '0-1 min', min: 0, max: 1, count: 0 },
-                        { label: '1-5 min', min: 1, max: 5, count: 0 },
-                        { label: '5-15 min', min: 5, max: 15, count: 0 },
-                        { label: '15-30 min', min: 15, max: 30, count: 0 },
-                        { label: '30-60 min', min: 30, max: 60, count: 0 },
-                        { label: '1-2 hours', min: 60, max: 120, count: 0 },
-                        { label: '2-4 hours', min: 120, max: 240, count: 0 },
-                        { label: '4+ hours', min: 240, max: Infinity, count: 0 }
-                      ]
-                      
-                      analytics.sessions.forEach(session => {
-                        const durationMinutes = session.duration / (1000 * 60)
-                        const bucket = buckets.find(b => durationMinutes >= b.min && durationMinutes < b.max)
-                        if (bucket) {
-                          bucket.count++
-                        }
-                      })
-                      
-                      return buckets.filter(b => b.count > 0)
-                    })()
-                  }>
+                  <ComposedChart data={analytics.browsingSessions.slice(-30)}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
-                      dataKey="label" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      fontSize={12}
+                      dataKey="date" 
+                      tickFormatter={(date) => new Date(date).toLocaleDateString()}
                     />
-                    <YAxis />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
                     <Tooltip 
-                      formatter={(value) => [value, 'Sessions']}
-                      labelFormatter={(label) => `Duration: ${label}`}
+                      labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                      formatter={(value, name) => [
+                        name === 'sessions' ? value : `${Math.round(value as number / 60000)}min`,
+                        name === 'sessions' ? 'Sessions' : 'Avg Session Length'
+                      ]}
                     />
-                    <Bar dataKey="count" fill="#82ca9d" />
-                  </BarChart>
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="sessions" fill="#3b82f6" name="Sessions" />
+                    <Line yAxisId="right" type="monotone" dataKey="avgSessionLength" stroke="#ef4444" strokeWidth={2} name="Avg Length" />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -608,6 +597,18 @@ export const BrowserHistoryCharts: React.FC = () => {
                         {formatDuration(longestSession)}
                       </div>
                       <div className="text-sm text-muted-foreground">Longest Session</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                    <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">Session Analysis</h4>
+                    <div className="text-sm space-y-1">
+                      <p>• Sessions are grouped by 30-minute gaps between visits</p>
+                      <p>• Peak session day: {analytics.browsingSessions.reduce((max, day) => 
+                        day.sessions > max.sessions ? day : max, { date: 'N/A', sessions: 0 }).date}</p>
+                      <p>• Most productive sessions: {analytics.browsingSessions
+                        .filter(day => day.sessions > 0)
+                        .sort((a, b) => b.avgSessionLength - a.avgSessionLength)[0]?.date || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -664,7 +665,16 @@ export const BrowserHistoryCharts: React.FC = () => {
             </Card>
           </div>
         </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
+
+        <TabsContent value="time-analysis" className="mt-6">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>🕐 URL Visit Patterns by Time</CardTitle>
+                <CardDescription>
+                  Discover which websites you visit at different times of the day and week
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <Select value={selectedTimeUrl} onValueChange={setSelecte
