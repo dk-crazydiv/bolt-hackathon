@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useDataStore } from '../../store/dataStore';
 import { BrowserHistoryAnalyzer } from '../../utils/browserHistoryAnalyzer';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Globe, Clock, TrendingUp } from 'lucide-react';
@@ -17,7 +16,6 @@ interface BrowserHistoryChartsProps {
 }
 
 export default function BrowserHistoryCharts({ analytics: propAnalytics }: BrowserHistoryChartsProps) {
-  const [selectedTimeUrl, setSelectedTimeUrl] = useState<string>('');
   const { getPageData } = useDataStore();
   const data = getPageData('browserHistory');
 
@@ -109,21 +107,6 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <Select value={selectedTimeUrl} onValueChange={setSelectedTimeUrl}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a URL to analyze" />
-              </SelectTrigger>
-              <SelectContent>
-                {analytics.topSites.slice(0, 10).map(site => (
-                  <SelectItem key={site.url} value={site.url}>
-                    {site.title || site.url}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
           <div className="text-center py-12">
             <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">
