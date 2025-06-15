@@ -33,3 +33,5 @@ export default function BrowserHistoryCharts({ analytics }: BrowserHistoryCharts
     </div>
   );
 }
+
+export { BrowserHistoryCharts }
