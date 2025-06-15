@@ -33,6 +33,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const { getPageData, clearPageData, loadPageDataFromDB } = useDataStore()
   const currentData = getPageData(pageId)
   const deviceData = getPageData('deviceInfo') // Get device info data for browser history page
+  const [activeTab, setActiveTab] = React.useState('charts')
 
   // Load data from IndexedDB when component mounts
   useEffect(() => {
@@ -138,7 +139,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             <div className="flex items-center gap-3">
               {/* Main data file status */}
               {currentData && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                <div 
+                  className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
+                  onClick={() => setActiveTab('upload')}
+                  title="Click to upload new data"
+                >
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <span className="text-sm font-medium text-green-700 dark:text-green-300">
                     Data Loaded
@@ -169,7 +174,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               
               {/* Device info status for browser history page */}
               {pageId === 'browserHistory' && deviceData && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div 
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                  onClick={() => setActiveTab('upload')}
+                  title="Click to upload new device data"
+                >
                   <Smartphone className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
                     Device Info
@@ -260,7 +269,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           {additionalUpload}
         </div>
       ) : (
-        <Tabs defaultValue="charts" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="charts">Charts & Analysis</TabsTrigger>
             <TabsTrigger value="upload">Upload New Data</TabsTrigger>
