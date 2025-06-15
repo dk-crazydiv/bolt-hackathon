@@ -514,6 +514,8 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
+    console.log('🔍 Sample visits for analysis:', this.visits.slice(0, 3))
+    
     // Analyze top domains
     const domainMap = new Map<string, DomainStats>()
     
@@ -571,7 +573,15 @@ export class BrowserHistoryAnalyzer {
     // Daily activity
     const dailyMap = new Map<string, { visits: number; duration: number }>()
     this.visits.forEach(visit => {
+      if (!visit.timestamp || visit.timestamp <= 0) {
+        console.log('⚠️ Invalid timestamp for visit:', visit)
+        return
+      }
       const date = new Date(visit.timestamp || 0).toISOString().split('T')[0]
+      if (!date || date === 'Invalid Date') {
+        console.log('⚠️ Invalid date generated for visit:', visit, 'timestamp:', visit.timestamp)
+        return
+      }
       const existing = dailyMap.get(date) || { visits: 0, duration: 0 }
       existing.visits += visit.visitCount || 1
       existing.duration += visit.visitDuration || 0
@@ -581,11 +591,19 @@ export class BrowserHistoryAnalyzer {
     const dailyActivity = Array.from(dailyMap.entries())
       .map(([date, stats]) => ({ date, ...stats }))
       .sort((a, b) => a.date.localeCompare(b.date))
+      
+    console.log('📊 Daily activity generated:', dailyActivity.length, 'entries')
+    console.log('📊 Sample daily activity:', dailyActivity.slice(0, 3))
 
     // Hourly activity
     const hourlyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
+      if (!visit.timestamp || visit.timestamp <= 0) return
       const hour = new Date(visit.timestamp || 0).getHours()
+      if (isNaN(hour)) {
+        console.log('⚠️ Invalid hour generated for visit:', visit)
+        return
+      }
       const existing = hourlyMap.get(hour) || { visits: 0, totalDuration: 0 }
       existing.visits += visit.visitCount || 1
       existing.totalDuration += visit.visitDuration || 0
@@ -600,11 +618,17 @@ export class BrowserHistoryAnalyzer {
         avgDuration: stats.visits > 0 ? stats.totalDuration / stats.visits : 0
       }
     })
+    
+    console.log('📊 Hourly activity generated:', hourlyActivity.length, 'entries')
+    console.log('📊 Sample hourly activity:', hourlyActivity.slice(0, 3))
+    console.log('📊 Total hourly visits:', hourlyActivity.reduce((sum, h) => sum + h.visits, 0))
 
     // Weekly pattern
     const weeklyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
+      if (!visit.timestamp || visit.timestamp <= 0) return
       const dayOfWeek = new Date(visit.timestamp || 0).getDay()
+      if (isNaN(dayOfWeek)) return
       const existing = weeklyMap.get(dayOfWeek) || { visits: 0, totalDuration: 0 }
       existing.visits += visit.visitCount || 1
       existing.totalDuration += visit.visitDuration || 0
@@ -636,7 +660,7 @@ export class BrowserHistoryAnalyzer {
       { typedCount: 0, url: 'None' }
     ).url
 
-    return {
+    const result = {
       topDomains,
       topSites,
       sessions,
@@ -654,5 +678,14 @@ export class BrowserHistoryAnalyzer {
         mostTypedSite
       }
     }
+    
+    console.log('✅ Final analysis result summary:', {
+      dailyActivityCount: result.dailyActivity.length,
+      hourlyActivityCount: result.hourlyActivity.length,
+      totalVisits: result.totalStats.totalVisits,
+      totalSites: result.totalStats.totalSites
+    })
+    
+    return result
   }
 }

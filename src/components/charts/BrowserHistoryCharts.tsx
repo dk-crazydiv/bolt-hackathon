@@ -302,12 +302,16 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 <CardDescription>Your browsing activity over time</CardDescription>
               </CardHeader>
               <CardContent>
+                {analytics.dailyActivity && analytics.dailyActivity.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <AreaChart data={analytics.dailyActivity.slice(-30)}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip 
+                      labelFormatter={(value) => `Date: ${value}`}
+                      formatter={(value, name) => [value, name === 'visits' ? 'Visits' : name]}
+                    />
                     <Area
                       type="monotone"
                       dataKey="visits"
@@ -317,6 +321,15 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                     />
                   </AreaChart>
                 </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                    <div className="text-center">
+                      <BarChart3 className="h-8 w-8 mx-auto mb-2" />
+                      <p className="text-sm">No daily activity data available</p>
+                      <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -326,18 +339,75 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 <CardDescription>When you browse the most</CardDescription>
               </CardHeader>
               <CardContent>
+                {analytics.hourlyActivity && analytics.hourlyActivity.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={analytics.hourlyActivity}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="hour" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip 
+                      labelFormatter={(value) => `Hour: ${value}:00`}
+                      formatter={(value, name) => [value, name === 'visits' ? 'Visits' : name]}
+                    />
                     <Bar dataKey="visits" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                    <div className="text-center">
+                      <Clock className="h-8 w-8 mx-auto mb-2" />
+                      <p className="text-sm">No hourly activity data available</p>
+                      <p className="text-xs">Data: {analytics.hourlyActivity?.length || 0} hours</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
+          
+          {/* Debug Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>🔍 Data Debug Information</CardTitle>
+              <CardDescription>Debugging information for chart data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded">
+                  <h4 className="font-semibold mb-2">📊 Analytics Data</h4>
+                  <div className="space-y-1">
+                    <div>Daily Activity: {analytics.dailyActivity?.length || 0} entries</div>
+                    <div>Hourly Activity: {analytics.hourlyActivity?.length || 0} entries</div>
+                    <div>Top Sites: {analytics.topSites?.length || 0} sites</div>
+                    <div>Top Domains: {analytics.topDomains?.length || 0} domains</div>
+                    <div>Sessions: {analytics.sessions?.length || 0} sessions</div>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-green-50 dark:bg-green-950 rounded">
+                  <h4 className="font-semibold mb-2">📈 Sample Data</h4>
+                  <div className="space-y-1 text-xs">
+                    {analytics.dailyActivity && analytics.dailyActivity.length > 0 && (
+                      <div>
+                        <div className="font-medium">Daily Sample:</div>
+                        <div className="font-mono">
+                          {JSON.stringify(analytics.dailyActivity[0], null, 2).slice(0, 100)}...
+                        </div>
+                      </div>
+                    )}
+                    {analytics.hourlyActivity && analytics.hourlyActivity.length > 0 && (
+                      <div>
+                        <div className="font-medium">Hourly Sample:</div>
+                        <div className="font-mono">
+                          {JSON.stringify(analytics.hourlyActivity[0], null, 2)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="sites" className="space-y-6">
