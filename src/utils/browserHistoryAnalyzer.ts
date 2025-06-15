@@ -156,7 +156,7 @@ export class BrowserHistoryAnalyzer {
           }
         }
       }
-    } else if (data.Browser && data.Browser.History && Array.isArray(data.Browser.History)) {
+    } else if (data.Browser?.History && Array.isArray(data.Browser.History)) {
       console.log('Found data.Browser.History array, length:', data.Browser.History.length)
       visits = data.Browser.History
     } else if (data.History && Array.isArray(data.History)) {
@@ -206,7 +206,7 @@ export class BrowserHistoryAnalyzer {
       console.log('Full data dump:', JSON.stringify(data, null, 2))
     }
 
-    const processedVisits = visits.map(visit => {
+    const processedVisits = visits.filter(visit => visit && typeof visit === 'object').map(visit => {
       // Handle Chrome's specific timestamp format
       const visitTime = visit.last_visit_time || 
                        visit.visit_time || 
@@ -232,7 +232,6 @@ export class BrowserHistoryAnalyzer {
         hidden: visit.hidden
       }
       
-      console.log('Processed visit:', processedVisit)
       return processedVisit
     }).filter(visit => {
       const hasValidUrl = visit.url && (
@@ -247,7 +246,9 @@ export class BrowserHistoryAnalyzer {
     })
     
     console.log('Final processed visits count:', processedVisits.length)
-    console.log('Sample processed visits:', processedVisits.slice(0, 3))
+    if (processedVisits.length > 0) {
+      console.log('Sample processed visits:', processedVisits.slice(0, 3))
+    }
     
     return processedVisits
   }
@@ -280,6 +281,10 @@ export class BrowserHistoryAnalyzer {
   }
 
   private extractDomain(url: string): string {
+    if (!url || typeof url !== 'string') {
+      return 'unknown'
+    }
+    
     try {
       // Handle URLs without protocol
       if (!url.startsWith('http') && !url.startsWith('//')) {
@@ -295,7 +300,6 @@ export class BrowserHistoryAnalyzer {
       const urlObj = new URL(url)
       return urlObj.hostname.replace(/^www\./, '')
     } catch {
-      console.log('Failed to parse URL:', url)
       return 'unknown'
     }
   }
@@ -348,13 +352,32 @@ export class BrowserHistoryAnalyzer {
   analyze(): BrowserAnalytics {
     console.log('Analyzing visits:', this.visits.length, 'visits')
     
+    if (this.visits.length === 0) {
+      console.log('No visits to analyze, returning empty analytics')
+      return {
+        topDomains: [],
+        topSites: [],
+        sessions: [],
+        dailyActivity: [],
+        hourlyActivity: Array.from({ length: 24 }, (_, hour) => ({ hour, visits: 0, avgDuration: 0 })),
+        weeklyPattern: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+          .map(day => ({ day, visits: 0, avgDuration: 0 })),
+        totalStats: {
+          totalVisits: 0,
+          totalSites: 0,
+          totalDomains: 0,
+          avgVisitsPerSite: 0,
+          mostTypedSite: 'None'
+        }
+      }
+    }
+    
     // Analyze top domains
     const domainMap = new Map<string, DomainStats>()
     
     this.visits.forEach(visit => {
       const domain = this.extractDomain(visit.url)
       if (domain === 'unknown') {
-        console.log('Unknown domain for URL:', visit.url)
         return
       }
       
