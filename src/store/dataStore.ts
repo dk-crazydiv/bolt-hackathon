@@ -77,15 +77,26 @@ export const useDataStore = create<DataState>()(
     }),
     {
       name: 'data-explorer-storage',
-      partialize: (state) => ({
-        googleMapsTimelineData: state.googleMapsTimelineData,
-        browserHistoryData: state.browserHistoryData,
-        youtubeHistoryData: state.youtubeHistoryData,
-        playstoreAppsData: state.playstoreAppsData,
-        fitbitData: state.fitbitData,
-        googleMapReviewsData: state.googleMapReviewsData,
-        debugJsonData: state.debugJsonData
-      })
+      partialize: (state) => {
+        // Helper function to exclude the large data array from ParsedData
+        const excludeDataArray = (parsedData: ParsedData | null) => {
+          if (!parsedData) return null
+          return {
+            ...parsedData,
+            data: [] // Store empty array instead of the full data to save space
+          }
+        }
+
+        return {
+          googleMapsTimelineData: excludeDataArray(state.googleMapsTimelineData),
+          browserHistoryData: excludeDataArray(state.browserHistoryData),
+          youtubeHistoryData: excludeDataArray(state.youtubeHistoryData),
+          playstoreAppsData: excludeDataArray(state.playstoreAppsData),
+          fitbitData: excludeDataArray(state.fitbitData),
+          googleMapReviewsData: excludeDataArray(state.googleMapReviewsData),
+          debugJsonData: excludeDataArray(state.debugJsonData)
+        }
+      }
     }
   )
 )
