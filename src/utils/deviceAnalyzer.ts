@@ -188,78 +188,107 @@ export class DeviceAnalyzer {
   }
 
   private categorizeDeviceType(device: DeviceInfo): 'mobile' | 'tablet' | 'laptop' | 'unknown' {
-    const formFactor = (device.device_form_factor || '').toLowerCase()
-    const deviceType = (device.device_type || '').toLowerCase()
-    const osType = (device.os_type || '').toLowerCase()
+    const formFactor = device.device_form_factor || ''
+    const deviceType = device.device_type || ''
+    const osType = device.os_type || ''
     const manufacturer = (device.manufacturer || '').toLowerCase()
     const model = (device.model || '').toLowerCase()
     const clientName = (device.client_name || '').toLowerCase()
 
     console.log('🔍 Categorizing device:', {
-      formFactor,
-      deviceType,
-      osType,
+      formFactor: formFactor,
+      deviceType: deviceType,
+      osType: osType,
       manufacturer,
       model,
-      clientName
+      clientName,
+      rawDevice: device
     })
 
-    // Check form factor first (most reliable)
-    if (formFactor.includes('phone') || formFactor.includes('mobile') || formFactor === 'device_form_factor_phone') {
+    // Check exact form factor values first (most reliable)
+    if (formFactor === 'DEVICE_FORM_FACTOR_PHONE') {
+      console.log('✅ Categorized as mobile via DEVICE_FORM_FACTOR_PHONE')
       return 'mobile'
     }
-    if (formFactor.includes('tablet') || formFactor === 'device_form_factor_tablet') {
+    if (formFactor === 'DEVICE_FORM_FACTOR_TABLET') {
+      console.log('✅ Categorized as tablet via DEVICE_FORM_FACTOR_TABLET')
       return 'tablet'
     }
-    if (formFactor.includes('desktop') || formFactor.includes('laptop') || formFactor === 'device_form_factor_desktop') {
+    if (formFactor === 'DEVICE_FORM_FACTOR_DESKTOP') {
+      console.log('✅ Categorized as laptop via DEVICE_FORM_FACTOR_DESKTOP')
       return 'laptop'
     }
 
-    // Check device type (second priority)
-    if (deviceType.includes('phone') || deviceType.includes('mobile') || deviceType === 'type_phone') {
+    // Check exact device type values (second priority)
+    if (deviceType === 'TYPE_PHONE') {
+      console.log('✅ Categorized as mobile via TYPE_PHONE')
       return 'mobile'
     }
-    if (deviceType.includes('tablet') || deviceType === 'type_tablet') {
+    if (deviceType === 'TYPE_TABLET') {
+      console.log('✅ Categorized as tablet via TYPE_TABLET')
       return 'tablet'
     }
-    if (deviceType.includes('mac') || deviceType.includes('windows') || deviceType.includes('linux') || deviceType === 'type_mac') {
+    if (deviceType === 'TYPE_MAC' || deviceType === 'TYPE_WINDOWS' || deviceType === 'TYPE_LINUX') {
+      console.log('✅ Categorized as laptop via', deviceType)
       return 'laptop'
     }
 
-    // Check OS type (third priority)
-    if (osType.includes('ios') || osType === 'os_type_ios') {
+    // Check exact OS type values (third priority)
+    if (osType === 'OS_TYPE_IOS') {
       // iOS devices - check model to distinguish iPhone vs iPad
-      if (model.includes('ipad') || clientName.includes('ipad')) {
+      if (model.toLowerCase().includes('ipad') || clientName.includes('ipad')) {
+        console.log('✅ Categorized as tablet via OS_TYPE_IOS + iPad model')
         return 'tablet'
       }
-      if (model.includes('iphone') || clientName.includes('iphone')) {
+      if (model.toLowerCase().includes('iphone') || clientName.includes('iphone')) {
+        console.log('✅ Categorized as mobile via OS_TYPE_IOS + iPhone model')
         return 'mobile'
       }
       // Default iOS to mobile if unclear
+      console.log('✅ Categorized as mobile via OS_TYPE_IOS (default)')
       return 'mobile'
     }
-    if (osType.includes('android') || osType === 'os_type_android') {
+    if (osType === 'OS_TYPE_ANDROID') {
       // Android devices - check model/manufacturer for tablets
-      if (model.includes('tablet') || clientName.includes('tablet') || 
-          manufacturer.includes('tablet') || formFactor.includes('tablet')) {
+      if (model.toLowerCase().includes('tablet') || clientName.includes('tablet') || 
+          manufacturer.includes('tablet')) {
+        console.log('✅ Categorized as tablet via OS_TYPE_ANDROID + tablet indicators')
         return 'tablet'
       }
       return 'mobile'
     }
-    if (osType.includes('mac') || osType.includes('windows') || osType.includes('linux') || 
-        osType === 'os_type_mac' || osType === 'os_type_windows' || osType === 'os_type_linux') {
+    if (osType === 'OS_TYPE_MAC' || osType === 'OS_TYPE_WINDOWS' || osType === 'OS_TYPE_LINUX') {
+      console.log('✅ Categorized as laptop via', osType)
+      return 'laptop'
+    }
+
+    // Check lowercase form factor as fallback
+    const formFactorLower = formFactor.toLowerCase()
+    if (formFactorLower.includes('phone') || formFactorLower.includes('mobile')) {
+      console.log('✅ Categorized as mobile via lowercase form factor')
+      return 'mobile'
+    }
+    if (formFactorLower.includes('tablet')) {
+      console.log('✅ Categorized as tablet via lowercase form factor')
+      return 'tablet'
+    }
+    if (formFactorLower.includes('desktop') || formFactorLower.includes('laptop')) {
+      console.log('✅ Categorized as laptop via lowercase form factor')
       return 'laptop'
     }
 
     // Check manufacturer and model patterns
     if (manufacturer.includes('apple')) {
       if (model.includes('iphone') || clientName.includes('iphone')) {
+        console.log('✅ Categorized as mobile via Apple + iPhone')
         return 'mobile'
       }
       if (model.includes('ipad') || clientName.includes('ipad')) {
+        console.log('✅ Categorized as tablet via Apple + iPad')
         return 'tablet'
       }
       if (model.includes('mac') || clientName.includes('mac')) {
+        console.log('✅ Categorized as laptop via Apple + Mac')
         return 'laptop'
       }
     }
@@ -268,12 +297,21 @@ export class DeviceAnalyzer {
         manufacturer.includes('xiaomi') || manufacturer.includes('huawei')) {
       // Android manufacturers - default to mobile unless tablet indicators
       if (model.includes('tablet') || model.includes('tab ') || clientName.includes('tablet')) {
+        console.log('✅ Categorized as tablet via Android manufacturer + tablet indicators')
         return 'tablet'
       }
+      console.log('✅ Categorized as mobile via Android manufacturer')
       return 'mobile'
     }
 
-    console.log('⚠️ Could not categorize device, defaulting to unknown:', device)
+    console.log('❌ Could not categorize device, defaulting to unknown. Device details:', {
+      formFactor,
+      deviceType,
+      osType,
+      manufacturer,
+      model,
+      clientName
+    })
     return 'unknown'
   }
 
