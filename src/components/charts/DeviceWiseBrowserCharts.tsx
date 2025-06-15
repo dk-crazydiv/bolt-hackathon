@@ -7,6 +7,8 @@ import {
   Smartphone,
   Tablet,
   Laptop,
+  Monitor,
+  Phone,
   Clock,
   TrendingUp,
   Users,
@@ -14,7 +16,9 @@ import {
   Activity,
   BarChart3,
   PieChart,
-  Calendar
+  Calendar,
+  Apple,
+  Chrome
 } from 'lucide-react'
 import {
   AreaChart,
@@ -126,10 +130,39 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
 
   const getDeviceIcon = (deviceType: string) => {
     switch (deviceType) {
-      case 'mobile': return <Smartphone className="h-4 w-4" />
-      case 'tablet': return <Tablet className="h-4 w-4" />
-      case 'laptop': return <Laptop className="h-4 w-4" />
-      default: return <Globe className="h-4 w-4" />
+      case 'mobile': return <Phone className="h-4 w-4 text-red-500" />
+      case 'tablet': return <Tablet className="h-4 w-4 text-orange-500" />
+      case 'laptop': return <Monitor className="h-4 w-4 text-blue-500" />
+      default: return <Globe className="h-4 w-4 text-gray-500" />
+    }
+  }
+
+  const getDeviceIconLarge = (deviceType: string) => {
+    switch (deviceType) {
+      case 'mobile': return <Phone className="h-6 w-6 text-red-500" />
+      case 'tablet': return <Tablet className="h-6 w-6 text-orange-500" />
+      case 'laptop': return <Monitor className="h-6 w-6 text-blue-500" />
+      default: return <Globe className="h-6 w-6 text-gray-500" />
+    }
+  }
+
+  const getManufacturerIcon = (manufacturer: string) => {
+    const mfg = manufacturer.toLowerCase()
+    if (mfg.includes('apple')) {
+      return <Apple className="h-4 w-4 text-gray-600" />
+    }
+    if (mfg.includes('google') || mfg.includes('chrome')) {
+      return <Chrome className="h-4 w-4 text-blue-600" />
+    }
+    return <Globe className="h-4 w-4 text-gray-500" />
+  }
+
+  const getDeviceTypeColor = (deviceType: string) => {
+    switch (deviceType) {
+      case 'mobile': return 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
+      case 'tablet': return 'bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800'
+      case 'laptop': return 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
+      default: return 'bg-gray-50 dark:bg-gray-950 border-gray-200 dark:border-gray-800'
     }
   }
 
@@ -329,37 +362,55 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
         <TabsContent value="devices" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredDeviceStats.map((device, index) => (
-              <Card key={device.device_guid}>
+              <Card key={device.device_guid} className={cn("transition-all hover:shadow-lg", getDeviceTypeColor(device.deviceType))}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    {getDeviceIcon(device.deviceType)}
+                  <CardTitle className="text-lg flex items-center gap-3">
+                    {getDeviceIconLarge(device.deviceType)}
                     <span className="truncate">{device.deviceName}</span>
                   </CardTitle>
-                  <div className="flex gap-2">
-                    <Badge variant="outline">{device.deviceType}</Badge>
-                    <Badge variant="secondary">{device.manufacturer}</Badge>
+                  <div className="flex gap-2 items-center">
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "capitalize",
+                        device.deviceType === 'mobile' && "border-red-300 text-red-700 dark:text-red-300",
+                        device.deviceType === 'tablet' && "border-orange-300 text-orange-700 dark:text-orange-300",
+                        device.deviceType === 'laptop' && "border-blue-300 text-blue-700 dark:text-blue-300"
+                      )}
+                    >
+                      {device.deviceType}
+                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {getManufacturerIcon(device.manufacturer)}
+                      <Badge variant="secondary">{device.manufacturer}</Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="p-2 bg-white/50 dark:bg-black/20 rounded">
                       <p className="text-muted-foreground">Total Visits</p>
-                      <p className="font-medium">{device.totalVisits.toLocaleString()}</p>
+                      <p className="font-bold text-lg">{device.totalVisits.toLocaleString()}</p>
                     </div>
-                    <div>
+                    <div className="p-2 bg-white/50 dark:bg-black/20 rounded">
                       <p className="text-muted-foreground">Unique URLs</p>
-                      <p className="font-medium">{device.uniqueUrls.toLocaleString()}</p>
+                      <p className="font-bold text-lg">{device.uniqueUrls.toLocaleString()}</p>
                     </div>
-                    <div>
+                    <div className="p-2 bg-white/50 dark:bg-black/20 rounded">
                       <p className="text-muted-foreground">Peak Hour</p>
-                      <p className="font-medium">{device.peakUsageHour}:00</p>
+                      <p className="font-bold text-lg">{device.peakUsageHour}:00</p>
                     </div>
-                    <div>
+                    <div className="p-2 bg-white/50 dark:bg-black/20 rounded">
                       <p className="text-muted-foreground">Top Site</p>
-                      <p className="font-medium truncate" title={device.mostVisitedSite}>
+                      <p className="font-bold text-sm truncate" title={device.mostVisitedSite}>
                         {device.mostVisitedSite}
                       </p>
                     </div>
+                  </div>
+                  
+                  <div className="p-2 bg-white/50 dark:bg-black/20 rounded">
+                    <p className="text-muted-foreground text-xs">Device Model</p>
+                    <p className="font-medium text-sm">{device.model}</p>
                   </div>
                   
                   <div className="pt-2 border-t">
@@ -371,6 +422,50 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
               </Card>
             ))}
           </div>
+          
+          {/* Device Type Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>📊 Device Type Summary</CardTitle>
+              <CardDescription>Overview of your device ecosystem</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {deviceComparison.map((comparison, index) => (
+                  <div key={comparison.deviceType} className={cn("p-4 rounded-lg border-2", getDeviceTypeColor(comparison.deviceType))}>
+                    <div className="flex items-center gap-3 mb-3">
+                      {getDeviceIconLarge(comparison.deviceType)}
+                      <div>
+                        <h3 className="font-bold text-lg capitalize">{comparison.deviceType}</h3>
+                        <p className="text-sm text-muted-foreground">{comparison.totalDevices} devices</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Total Visits:</span>
+                        <span className="font-bold">{comparison.totalVisits.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Avg per Device:</span>
+                        <span className="font-bold">{Math.round(comparison.avgVisitsPerDevice).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Peak Hours:</span>
+                        <div className="flex gap-1">
+                          {comparison.usagePatterns.peakHours.slice(0, 2).map(hour => (
+                            <Badge key={hour} variant="outline" className="text-xs">
+                              {hour}:00
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="comparison" className="space-y-6">

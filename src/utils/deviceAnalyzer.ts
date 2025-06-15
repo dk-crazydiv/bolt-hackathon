@@ -205,7 +205,25 @@ export class DeviceAnalyzer {
       rawDevice: device
     })
 
-    // Check exact form factor values first (most reliable)
+    // Priority 1: Check exact device type values (most reliable for your data)
+    if (deviceType === 'TYPE_PHONE') {
+      console.log('✅ Categorized as mobile via TYPE_PHONE')
+      return 'mobile'
+    }
+    if (deviceType === 'TYPE_MAC') {
+      console.log('✅ Categorized as laptop via TYPE_MAC')
+      return 'laptop'
+    }
+    if (deviceType === 'TYPE_TABLET') {
+      console.log('✅ Categorized as tablet via TYPE_TABLET')
+      return 'tablet'
+    }
+    if (deviceType === 'TYPE_WINDOWS' || deviceType === 'TYPE_LINUX') {
+      console.log('✅ Categorized as laptop via', deviceType)
+      return 'laptop'
+    }
+
+    // Priority 2: Check exact form factor values
     if (formFactor === 'DEVICE_FORM_FACTOR_PHONE') {
       console.log('✅ Categorized as mobile via DEVICE_FORM_FACTOR_PHONE')
       return 'mobile'
@@ -219,21 +237,7 @@ export class DeviceAnalyzer {
       return 'laptop'
     }
 
-    // Check exact device type values (second priority)
-    if (deviceType === 'TYPE_PHONE') {
-      console.log('✅ Categorized as mobile via TYPE_PHONE')
-      return 'mobile'
-    }
-    if (deviceType === 'TYPE_TABLET') {
-      console.log('✅ Categorized as tablet via TYPE_TABLET')
-      return 'tablet'
-    }
-    if (deviceType === 'TYPE_MAC' || deviceType === 'TYPE_WINDOWS' || deviceType === 'TYPE_LINUX') {
-      console.log('✅ Categorized as laptop via', deviceType)
-      return 'laptop'
-    }
-
-    // Check exact OS type values (third priority)
+    // Priority 3: Check exact OS type values
     if (osType === 'OS_TYPE_IOS') {
       // iOS devices - check model to distinguish iPhone vs iPad
       if (model.toLowerCase().includes('ipad') || clientName.includes('ipad')) {
@@ -255,6 +259,7 @@ export class DeviceAnalyzer {
         console.log('✅ Categorized as tablet via OS_TYPE_ANDROID + tablet indicators')
         return 'tablet'
       }
+      console.log('✅ Categorized as mobile via OS_TYPE_ANDROID')
       return 'mobile'
     }
     if (osType === 'OS_TYPE_MAC' || osType === 'OS_TYPE_WINDOWS' || osType === 'OS_TYPE_LINUX') {
@@ -262,7 +267,7 @@ export class DeviceAnalyzer {
       return 'laptop'
     }
 
-    // Check lowercase form factor as fallback
+    // Priority 4: Check lowercase patterns as fallback
     const formFactorLower = formFactor.toLowerCase()
     if (formFactorLower.includes('phone') || formFactorLower.includes('mobile')) {
       console.log('✅ Categorized as mobile via lowercase form factor')
@@ -277,7 +282,7 @@ export class DeviceAnalyzer {
       return 'laptop'
     }
 
-    // Check manufacturer and model patterns
+    // Priority 5: Check manufacturer and model patterns
     if (manufacturer.includes('apple')) {
       if (model.includes('iphone') || clientName.includes('iphone')) {
         console.log('✅ Categorized as mobile via Apple + iPhone')
