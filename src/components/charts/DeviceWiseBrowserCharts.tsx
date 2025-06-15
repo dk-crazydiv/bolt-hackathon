@@ -38,6 +38,7 @@ import {
   Legend
 } from 'recharts'
 import { DeviceAnalyzer } from '../../utils/deviceAnalyzer'
+import { cn } from '../../lib/utils'
 
 const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316']
 const DEVICE_COLORS = {
@@ -687,79 +688,4 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
                   <Line
                     type="monotone"
                     dataKey="visits"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>🕐 Hourly Usage Distribution</CardTitle>
-                <CardDescription>When each device type is most active</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <AreaChart data={crossDevicePatterns.timeBasedUsage}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis />
-                    <Tooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="mobile"
-                      stroke={DEVICE_COLORS.mobile}
-                      fill={DEVICE_COLORS.mobile}
-                      fillOpacity={0.3}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="laptop"
-                      stroke={DEVICE_COLORS.laptop}
-                      fill={DEVICE_COLORS.laptop}
-                      fillOpacity={0.3}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>📊 Device Activity Summary</CardTitle>
-                <CardDescription>Key metrics for each device</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {deviceStats.slice(0, 5).map((device, index) => (
-                    <div key={device.device_guid} className="flex items-center justify-between p-2 bg-muted rounded">
-                      <div className="flex items-center gap-2">
-                        {getDeviceIcon(device.deviceType)}
-                        <div>
-                          <p className="text-sm font-medium truncate" title={device.deviceName}>
-                            {device.deviceName}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {device.manufacturer} {device.model}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{device.totalVisits.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">visits</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
+                    stroke
