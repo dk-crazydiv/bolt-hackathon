@@ -35,6 +35,17 @@ interface BrowserHistoryChartsProps {
 export default function BrowserHistoryCharts({ analytics: propAnalytics }: BrowserHistoryChartsProps) {
   const { getPageData } = useDataStore();
   const data = getPageData('browserHistory');
+  // Load data from IndexedDB if we only have metadata
+  React.useEffect(() => {
+    const loadFullData = async () => {
+      if (data && !data.data && (data as any)._hasDataInIndexedDB) {
+        console.log('🔄 Loading full data from IndexedDB for browser history...');
+        await loadPageDataFromDB('browserHistory');
+      }
+    };
+    
+    loadFullData();
+  }, [data, loadPageDataFromDB]);
 
   const analytics = useMemo(() => {
     if (propAnalytics) {
@@ -55,9 +66,26 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       return result;
     }
     
+    console.log('⚠️ No data available for analysis:', { hasData: !!data, hasDataProperty: !!(data?.data) });
     return null;
   }, [propAnalytics, data]);
 
+  // Show loading state while data is being loaded from IndexedDB
+  if (data && !data.data && (data as any)._hasDataInIndexedDB) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+            <CardTitle className="mb-2">Loading data...</CardTitle>
+            <CardDescription>
+              Loading your browser history data from storage...
+            </CardDescription>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   if (!data) {
     return (
       <Card>
@@ -137,6 +165,18 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
+                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">🔍 Debug Information:</h4>
+                <div className="text-sm text-red-700 dark:text-red-300 space-y-1">
+                  <div>Data available: {data.data ? 'Yes' : 'No'}</div>
+                  <div>Data type: {typeof data.data}</div>
+                  {data.data && (
+                    <div>Data keys: {Object.keys(data.data).join(', ')}</div>
+                  )}
+                  <div>Total records in metadata: {data.metadata.totalRecords}</div>
+                </div>
+              </div>
+              
               <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
                 <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Expected Data Format:</h4>
                 <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
