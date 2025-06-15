@@ -1,6 +1,7 @@
 import React from 'react'
 import { PageLayout } from '@/components/common/PageLayout'
 import { BrowserHistoryCharts } from '@/components/charts/BrowserHistoryCharts'
+import { DeviceInfoUpload } from '@/components/common/DeviceInfoUpload'
 
 export const BrowserHistoryPage: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ export const BrowserHistoryPage: React.FC = () => {
         'Safari history data',
         'Edge browsing patterns'
       ]}
+      additionalUpload={<DeviceInfoUpload />}
     >
       <BrowserHistoryCharts />
     </PageLayout>
