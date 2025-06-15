@@ -35,6 +35,8 @@ interface BrowserHistoryChartsProps {
 export default function BrowserHistoryCharts({ analytics: propAnalytics }: BrowserHistoryChartsProps) {
   const { getPageData } = useDataStore();
   const data = getPageData('browserHistory');
+  const { loadPageDataFromDB } = useDataStore();
+  
   // Load data from IndexedDB if we only have metadata
   React.useEffect(() => {
     const loadFullData = async () => {
