@@ -128,6 +128,24 @@ class JsonStreamParser {
         }
       }
       
+      // Check for common browser history patterns
+      const possibleKeys = [
+        'visits', 'history', 'browsing_history', 'browser_history',
+        'urls', 'sites', 'pages', 'records', 'entries', 'items'
+      ]
+      
+      for (const key of possibleKeys) {
+        if (data[key] && Array.isArray(data[key])) {
+          console.log(`Found array at key "${key}", count:`, data[key].length)
+          totalCount += data[key].length
+        }
+      }
+      
+      if (totalCount > 0) {
+        console.log('Total count from known keys:', totalCount)
+        return totalCount
+      }
+      
       // General approach: count all arrays in the object
       const countArraysRecursively = (obj: any): number => {
         let count = 0

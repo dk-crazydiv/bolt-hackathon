@@ -99,6 +99,9 @@ export class BrowserHistoryAnalyzer {
     if (!data) return []
     
     console.log('=== PARSING VISITS DEBUG ===')
+    console.log('Raw data type:', typeof data)
+    console.log('Raw data keys:', Object.keys(data || {}))
+    console.log('Raw data structure:', data)
     
     // Handle different data structures
     let visits: any[] = []
@@ -136,6 +139,39 @@ export class BrowserHistoryAnalyzer {
           }
         }
       }
+    } else if (typeof data === 'object' && data !== null) {
+      // Handle direct object with potential nested structure
+      console.log('Checking object structure for visits...')
+      
+      // Check for common browser history patterns
+      const possibleKeys = [
+        'visits', 'history', 'browsing_history', 'browser_history',
+        'urls', 'sites', 'pages', 'records', 'entries', 'items'
+      ]
+      
+      for (const key of possibleKeys) {
+        if (data[key] && Array.isArray(data[key])) {
+          console.log(`Found visits array at key "${key}":`, data[key].length, 'items')
+          visits = data[key]
+          break
+        }
+      }
+      
+      // If no direct array found, look for nested structures
+      if (visits.length === 0) {
+        for (const [key, value] of Object.entries(data)) {
+          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            for (const nestedKey of possibleKeys) {
+              if (value[nestedKey] && Array.isArray(value[nestedKey])) {
+                console.log(`Found visits array at nested key "${key}.${nestedKey}":`, value[nestedKey].length, 'items')
+                visits = value[nestedKey]
+                break
+              }
+            }
+            if (visits.length > 0) break
+          }
+        }
+      }
     } else {
       // Deep search for visits
       const findVisits = (obj: any): any[] => {
@@ -145,7 +181,9 @@ export class BrowserHistoryAnalyzer {
             if (key.toLowerCase().includes('history') || 
                 key.toLowerCase().includes('visit') || 
                 key.toLowerCase().includes('chrome') ||
-                key.toLowerCase().includes('browser')) {
+                key.toLowerCase().includes('browser') ||
+                key.toLowerCase().includes('url') ||
+                key.toLowerCase().includes('site')) {
               const result = findVisits(value)
               if (result.length > 0) return result
             }
@@ -171,7 +209,15 @@ export class BrowserHistoryAnalyzer {
       })
     }
 
-    const processedVisits = visits.filter(visit => visit && typeof visit === 'object').map(visit => {
+    const processedVisits = visits
+      .filter(visit => {
+        if (!visit || typeof visit !== 'object') {
+          console.log('Filtered out non-object visit:', visit)
+          return false
+        }
+        return true
+      })
+      .map(visit => {
       // Prioritize time_usec as it's the actual visit time
       const visitTime = visit.time_usec || 
                        visit.last_visit_time || 
@@ -184,11 +230,13 @@ export class BrowserHistoryAnalyzer {
                        visit.last_visit ||
                        visit.visit_date ||
                        visit.access_time ||
+                       visit.when ||
+                       visit.datetime ||
                        Date.now()
       
       const processedVisit = {
-        url: visit.url || visit.URL || visit.uri || '',
-        title: visit.title || visit.Title || visit.name || visit.url || '',
+        url: visit.url || visit.URL || visit.uri || visit.href || visit.link || '',
+        title: visit.title || visit.Title || visit.name || visit.page_title || visit.url || '',
         visitTime: visitTime,
         visitDuration: visit.visitDuration || visit.duration || 0,
         visitCount: visit.visit_count || visit.visitCount || visit.count || 1,
@@ -200,16 +248,24 @@ export class BrowserHistoryAnalyzer {
       }
       
       return processedVisit
-    }).filter(visit => {
+    })
+    .filter(visit => {
       const hasValidUrl = visit.url && (
         visit.url.startsWith('http') || 
         visit.url.startsWith('www') || 
-        visit.url.includes('.')
+        visit.url.includes('.') ||
+        visit.url.length > 3
       )
+      if (!hasValidUrl) {
+        console.log('Filtered out invalid URL:', visit.url)
+      }
       return hasValidUrl
     })
     
     console.log('Final processed visits count:', processedVisits.length)
+    if (processedVisits.length > 0) {
+      console.log('Sample processed visit:', processedVisits[0])
+    }
     return processedVisits
   }
 

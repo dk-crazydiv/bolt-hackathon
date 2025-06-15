@@ -25,8 +25,12 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     }
     
     if (data && data.data) {
+      console.log('BrowserHistoryCharts: Processing data for analysis...')
+      console.log('Data structure:', data.data)
       const analyzer = new BrowserHistoryAnalyzer(data.data);
-      return analyzer.analyze();
+      const result = analyzer.analyze();
+      console.log('Analysis result:', result)
+      return result;
     }
     
     return null;
