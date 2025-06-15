@@ -16,6 +16,7 @@ interface PageLayoutProps {
   acceptedFormats: string[]
   examples: string[]
   children: React.ReactNode
+  additionalUpload?: React.ReactNode
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -24,7 +25,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   description,
   acceptedFormats,
   examples,
-  children
+  children,
+  additionalUpload
 }) => {
   const navigate = useNavigate()
   const { getPageData, clearPageData, loadPageDataFromDB } = useDataStore()
@@ -128,7 +130,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       </div>
 
       {!currentData ? (
-        <DropZone pageId={pageId} />
+        <div className="space-y-6">
+          <DropZone pageId={pageId} />
+          {additionalUpload}
+        </div>
       ) : (
         <Tabs defaultValue="charts" className="w-full">
           <TabsList className="grid w-full grid-cols-2">

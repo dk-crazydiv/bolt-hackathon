@@ -11,6 +11,7 @@ interface DataState {
   playstoreAppsData: ParsedData | null
   fitbitData: ParsedData | null
   googleMapReviewsData: ParsedData | null
+  deviceInfoData: ParsedData | null
   debugJsonData: ParsedData | null
   
   // Current parsing state
@@ -40,6 +41,7 @@ export const useDataStore = create<DataState>()(
       playstoreAppsData: null,
       fitbitData: null,
       googleMapReviewsData: null,
+      deviceInfoData: null,
       debugJsonData: null,
       parseProgress: null,
       isLoading: false,
@@ -100,6 +102,7 @@ export const useDataStore = create<DataState>()(
           playstoreAppsData: null,
           fitbitData: null,
           googleMapReviewsData: null,
+          deviceInfoData: null,
           debugJsonData: null,
           parseProgress: null,
           isLoading: false,
@@ -122,7 +125,7 @@ export const useDataStore = create<DataState>()(
 
       // Initialize all data from IndexedDB on app start
       initializeFromDB: async () => {
-        const pages = ['googleMapsTimeline', 'browserHistory', 'youtubeHistory', 'playstoreAppsData', 'fitbitData', 'googleMapReviews', 'debugJson']
+        const pages = ['googleMapsTimeline', 'browserHistory', 'youtubeHistory', 'playstoreAppsData', 'fitbitData', 'googleMapReviews', 'deviceInfo', 'debugJson']
         
         for (const page of pages) {
           try {
@@ -159,6 +162,7 @@ export const useDataStore = create<DataState>()(
           playstoreAppsData: getMetadataOnly(state.playstoreAppsData),
           fitbitData: getMetadataOnly(state.fitbitData),
           googleMapReviewsData: getMetadataOnly(state.googleMapReviewsData),
+          deviceInfoData: getMetadataOnly(state.deviceInfoData),
           debugJsonData: getMetadataOnly(state.debugJsonData)
         }
       },
