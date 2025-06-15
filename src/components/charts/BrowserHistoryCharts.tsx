@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useDataStore } from '../../store/dataStore';
 import { BrowserHistoryAnalyzer } from '../../utils/browserHistoryAnalyzer';
+import { DeviceWiseBrowserCharts } from './DeviceWiseBrowserCharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -35,6 +36,7 @@ interface BrowserHistoryChartsProps {
 export default function BrowserHistoryCharts({ analytics: propAnalytics }: BrowserHistoryChartsProps) {
   const { getPageData } = useDataStore();
   const data = getPageData('browserHistory');
+  const deviceData = getPageData('playstoreAppsData'); // Device info is in Play Store data
   const { loadPageDataFromDB } = useDataStore();
   
   // Load data from IndexedDB if we only have metadata
@@ -270,11 +272,12 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">📊 Overview</TabsTrigger>
           <TabsTrigger value="sites">🌐 Top Sites</TabsTrigger>
           <TabsTrigger value="domains">🏢 Domains</TabsTrigger>
           <TabsTrigger value="patterns">📈 Patterns</TabsTrigger>
+          <TabsTrigger value="devices">📱 Devices</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -467,6 +470,13 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="devices" className="space-y-6">
+          <DeviceWiseBrowserCharts 
+            deviceData={deviceData?.data} 
+            browserData={data?.data} 
+          />
         </TabsContent>
       </Tabs>
     </div>
