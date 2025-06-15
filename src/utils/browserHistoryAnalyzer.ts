@@ -205,6 +205,8 @@ export class BrowserHistoryAnalyzer {
       console.log('NO VISITS FOUND! Data structure might be different.')
       console.log('Full data dump:', JSON.stringify(data, null, 2))
     }
+
+    const processedVisits = visits.map(visit => {
       // Handle Chrome's specific timestamp format
       const visitTime = visit.last_visit_time || 
                        visit.visit_time || 
