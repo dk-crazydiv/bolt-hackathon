@@ -177,6 +177,52 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
       {!hasAnyData ? (
         <div className="space-y-6">
+          {/* Show formats and examples prominently when no data */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5 text-primary" />
+                  Accepted File Formats
+                </CardTitle>
+                <CardDescription>
+                  Upload files in any of these supported formats
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {acceptedFormats.map((format) => (
+                    <Badge key={format} variant="secondary" className="text-sm">
+                      {format}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  Data Examples
+                </CardTitle>
+                <CardDescription>
+                  Examples of data sources that work with this analyzer
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {examples.map((example, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                      <span>{example}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+          
           <DropZone 
             pageId={pageId}
             customTitle={pageId === 'browserHistory' ? 'Upload Browser History Data' : undefined}
