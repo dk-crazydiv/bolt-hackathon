@@ -558,29 +558,42 @@ export const BrowserHistoryCharts: React.FC = () => {
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={
-                    analytics.sessions
-                      .map(s => ({ duration: Math.floor(s.duration / (1000 * 60 * 5)) * 5 })) // 5-minute buckets
-                      .reduce((acc, curr) => {
-                        const existing = acc.find(item => item.duration === curr.duration)
-                        if (existing) {
-                          existing.count++
-                        } else {
-                          acc.push({ duration: curr.duration, count: 1 })
+                    (() => {
+                      // Create meaningful duration buckets
+                      const buckets = [
+                        { label: '0-1 min', min: 0, max: 1, count: 0 },
+                        { label: '1-5 min', min: 1, max: 5, count: 0 },
+                        { label: '5-15 min', min: 5, max: 15, count: 0 },
+                        { label: '15-30 min', min: 15, max: 30, count: 0 },
+                        { label: '30-60 min', min: 30, max: 60, count: 0 },
+                        { label: '1-2 hours', min: 60, max: 120, count: 0 },
+                        { label: '2-4 hours', min: 120, max: 240, count: 0 },
+                        { label: '4+ hours', min: 240, max: Infinity, count: 0 }
+                      ]
+                      
+                      analytics.sessions.forEach(session => {
+                        const durationMinutes = session.duration / (1000 * 60)
+                        const bucket = buckets.find(b => durationMinutes >= b.min && durationMinutes < b.max)
+                        if (bucket) {
+                          bucket.count++
                         }
-                        return acc
-                      }, [] as { duration: number; count: number }[])
-                      .sort((a, b) => a.duration - b.duration)
-                      .slice(0, 20)
+                      })
+                      
+                      return buckets.filter(b => b.count > 0)
+                    })()
                   }>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
-                      dataKey="duration" 
-                      tickFormatter={(value) => `${value}m`}
+                      dataKey="label" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      fontSize={12}
                     />
                     <YAxis />
                     <Tooltip 
                       formatter={(value) => [value, 'Sessions']}
-                      labelFormatter={(label) => `Duration: ${label} minutes`}
+                      labelFormatter={(label) => `Duration: ${label}`}
                     />
                     <Bar dataKey="count" fill="#82ca9d" />
                   </BarChart>
