@@ -52,7 +52,13 @@ export class BrowserHistoryAnalyzer {
   private visits: ChromeVisit[] = []
 
   constructor(data: any) {
+    console.log('Raw data keys:', Object.keys(data || {}))
+    console.log('Data structure preview:', data)
     this.visits = this.parseVisits(data)
+    console.log('Parsed visits count:', this.visits.length)
+    if (this.visits.length > 0) {
+      console.log('Sample visit:', this.visits[0])
+    }
   }
 
   private parseVisits(data: any): ChromeVisit[] {
@@ -67,6 +73,8 @@ export class BrowserHistoryAnalyzer {
       visits = data.visits
     } else if (data.data && Array.isArray(data.data)) {
       visits = data.data
+    } else if (data["Browser History"] && Array.isArray(data["Browser History"])) {
+      visits = data["Browser History"]
     } else if (data.Browser && data.Browser.History && Array.isArray(data.Browser.History)) {
       visits = data.Browser.History
     } else if (data.History && Array.isArray(data.History)) {
@@ -108,6 +116,8 @@ export class BrowserHistoryAnalyzer {
                        visit.timestamp || 
                        visit.time ||
                        visit.date ||
+                       visit.lastVisitTime ||
+                       visit.last_visit ||
                        Date.now()
       
       return {
@@ -121,7 +131,17 @@ export class BrowserHistoryAnalyzer {
         id: visit.id,
         hidden: visit.hidden
       }
-    }).filter(visit => visit.url && (visit.url.startsWith('http') || visit.url.startsWith('www')))
+    }).filter(visit => {
+      const hasValidUrl = visit.url && (
+        visit.url.startsWith('http') || 
+        visit.url.startsWith('www') || 
+        visit.url.includes('.')
+      )
+      if (!hasValidUrl) {
+        console.log('Filtered out invalid URL:', visit.url)
+      }
+      return hasValidUrl
+    })
   }
 
   private parseTimestamp(time: any): number {
