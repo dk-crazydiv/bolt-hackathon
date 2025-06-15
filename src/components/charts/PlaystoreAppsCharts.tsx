@@ -623,7 +623,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
                         acc[date] = (acc[date] || 0) + 1
                         return acc
                       }, {})
-                      |> (data => Object.entries(data).reduce((max: any, [date, count]: any) => 
+                      > (data => Object.entries(data).reduce((max: any, [date, count]: any) => 
                         count > max.count ? { date, count } : max, { date: 'N/A', count: 0 }
                       ).date)
                     }
