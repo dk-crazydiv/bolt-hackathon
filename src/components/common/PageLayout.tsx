@@ -249,6 +249,41 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               )}
             </div>
           )}
+          
+          {/* Show upload options when no data exists - for browser history page specifically */}
+          {!hasAnyData && pageId === 'browserHistory' && (
+            <div className="flex items-center gap-3">
+              {/* Browser data upload - primary */}
+              <div 
+                className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                onClick={() => setShowUpload(true)}
+                title="Click to upload browser history data"
+              >
+                <Database className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Upload Browser Data
+                </span>
+                <Badge variant="outline" className="text-xs text-blue-600">
+                  Required
+                </Badge>
+              </div>
+              
+              {/* Device data upload - secondary */}
+              <div 
+                className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-colors"
+                onClick={() => setShowUpload(true)}
+                title="Click to upload device data for enhanced analysis"
+              >
+                <Smartphone className="h-4 w-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                  Upload Device Data
+                </span>
+                <Badge variant="outline" className="text-xs text-yellow-600">
+                  Optional
+                </Badge>
+              </div>
+            </div>
+          )}
         </div>
         
         <p className="text-muted-foreground text-lg mb-4">{description}</p>
