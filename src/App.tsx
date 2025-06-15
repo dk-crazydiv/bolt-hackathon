@@ -1,30 +1,19 @@
 import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
-import { DropZone } from './components/DropZone'
-import { JsonDebugView } from './components/JsonDebugView/JsonDebugView'
-import { ChartView } from './components/Charts/ChartView'
-import { useUIStore } from './store/uiStore'
+import { HomePage } from './pages/HomePage'
+import { DataTypePage } from './pages/DataTypePage'
 
 function App() {
-  const { currentTab } = useUIStore()
-
-  const renderTabContent = () => {
-    switch (currentTab) {
-      case 0:
-        return <DropZone />
-      case 1:
-        return <JsonDebugView />
-      case 2:
-        return <ChartView />
-      default:
-        return <DropZone />
-    }
-  }
-
   return (
-    <AppLayout>
-      {renderTabContent()}
-    </AppLayout>
+    <Router>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/data/:dataType" element={<DataTypePage />} />
+        </Routes>
+      </AppLayout>
+    </Router>
   )
 }
 
