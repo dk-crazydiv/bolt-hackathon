@@ -239,8 +239,29 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
       {!hasAnyData || showUpload ? (
         <div className="space-y-6">
-          {/* Show formats and examples when no data or in upload mode */}
+          {/* No data state - show click to upload message */}
           {!hasAnyData && (
+            <Card 
+              className="border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors"
+              onClick={() => setShowUpload(true)}
+            >
+              <CardContent className="flex items-center justify-center py-12 text-center">
+                <div>
+                  <Database className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <CardTitle className="mb-2 text-primary">No data uploaded</CardTitle>
+                  <CardDescription className="mb-4">
+                    Click here to upload your {title.toLowerCase()} data and start exploring insights
+                  </CardDescription>
+                  <Badge variant="outline" className="text-primary border-primary">
+                    Click to upload
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Show formats and examples when no data or in upload mode */}
+          {(!hasAnyData && showUpload) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -287,12 +308,17 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             </div>
           )}
           
-          <DropZone 
-            pageId={pageId}
-            customTitle={pageId === 'browserHistory' ? 'Upload Browser History Data' : undefined}
-            customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
-          />
-          {additionalUpload}
+          {/* Show upload interface when no data and showUpload is true, or when data exists and showUpload is true */}
+          {((!hasAnyData && showUpload) || (hasAnyData && showUpload)) && (
+            <>
+              <DropZone 
+                pageId={pageId}
+                customTitle={pageId === 'browserHistory' ? 'Upload Browser History Data' : undefined}
+                customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
+              />
+              {additionalUpload}
+            </>
+          )}
         </div>
       ) : (
         // Show charts when data exists and not in upload mode
