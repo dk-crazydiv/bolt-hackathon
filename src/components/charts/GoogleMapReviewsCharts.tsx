@@ -6,6 +6,10 @@ import { useDataStore } from '../../store/dataStore'
 import { RatingTrendChart } from './google-maps-reviews/RatingTrendChart'
 import { ReviewsByLocationChart } from './google-maps-reviews/ReviewsByLocationChart'
 import { ReviewsByCityStateChart } from './google-maps-reviews/ReviewsByCityStateChart'
+import { RatingDistributionChart } from './google-maps-reviews/RatingDistributionChart'
+import { ReviewWordCloud } from './google-maps-reviews/ReviewWordCloud'
+import { AdvancedStats } from './google-maps-reviews/AdvancedStats'
+import { ReviewCalendar } from './google-maps-reviews/ReviewCalendar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Button } from '../ui/button'
 
@@ -30,6 +34,11 @@ export const GoogleMapReviewsCharts: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="space-y-4 mb-6">
+        <h2 className="text-2xl font-bold">Key Statistics</h2>
+        <AdvancedStats data={data.data} />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -68,8 +77,11 @@ export const GoogleMapReviewsCharts: React.FC = () => {
       <Tabs defaultValue="rating-trend">
         <TabsList>
           <TabsTrigger value="rating-trend">Rating Trend</TabsTrigger>
+          <TabsTrigger value="rating-distribution">Rating Distribution</TabsTrigger>
+          <TabsTrigger value="word-clouds">Word Clouds</TabsTrigger>
           <TabsTrigger value="reviews-by-country">Reviews by Country</TabsTrigger>
           <TabsTrigger value="reviews-by-city-state">Reviews by City/State</TabsTrigger>
+          <TabsTrigger value="review-calendar">Review Calendar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="rating-trend">
@@ -86,6 +98,36 @@ export const GoogleMapReviewsCharts: React.FC = () => {
           </Card>
         </TabsContent>
         
+        <TabsContent value="rating-distribution">
+          <Card>
+            <CardHeader>
+              <CardTitle>Overall Rating Distribution</CardTitle>
+              <CardDescription>
+                **Q3: What does my overall rating distribution look like?** This chart shows the percentage of all reviews you have given, grouped by star rating.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RatingDistributionChart data={data.data} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="word-clouds">
+          <Card>
+            <CardHeader>
+              <CardTitle>1★ vs 5★ Word Clouds</CardTitle>
+              <CardDescription>
+                **Q4: What words do I use in my most positive vs. most negative reviews?** This visualization shows the most common words in your 1-star and 5-star reviews.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div style={{ height: '400px' }}>
+                <ReviewWordCloud data={data.data} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="reviews-by-country">
           <Card>
             <CardHeader>
@@ -96,6 +138,22 @@ export const GoogleMapReviewsCharts: React.FC = () => {
             </CardHeader>
             <CardContent>
               <ReviewsByLocationChart data={data.data} groupBy="country" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="review-calendar">
+          <Card>
+            <CardHeader>
+              <CardTitle>Review Activity Calendar</CardTitle>
+              <CardDescription>
+                This chart shows your review frequency, similar to a GitHub contribution graph.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0">
+              <div style={{ height: 'auto', width: '100%' }}>
+                <ReviewCalendar data={data.data} />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
