@@ -41,9 +41,12 @@ export const useDataStore = create<DataState>()(
 
       // Actions
       setPageData: (page, data) =>
-        set((state) => ({
-          [`${page}Data`]: data,
-        })),
+        set((state) => {
+          console.log(`Setting data for page ${page}:`, data?.metadata?.totalRecords, 'records')
+          return {
+            [`${page}Data`]: data,
+          }
+        }),
 
       getPageData: (page) => {
         const state = get()
