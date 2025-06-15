@@ -10,7 +10,7 @@ import {
   Alert
 } from '@mui/material'
 import { Search } from '@mui/icons-material'
-import ReactJson from 'react-json-view'
+import ReactJson from '@microlink/react-json-view'
 import { useDataStore } from '../../store/dataStore'
 import { useUIStore } from '../../store/uiStore'
 
