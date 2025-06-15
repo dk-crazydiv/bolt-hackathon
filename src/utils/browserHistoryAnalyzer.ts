@@ -7,6 +7,12 @@ export interface ChromeVisit {
   visitDuration?: number
   visitCount?: number
   timestamp?: number
+  visit_time?: number
+  last_visit_time?: number
+  typed_count?: number
+  visit_count?: number
+  hidden?: number
+  id?: number
 }
 
 export interface DomainStats {
@@ -15,6 +21,7 @@ export interface DomainStats {
   totalTime: number
   lastVisit: Date
   urls: string[]
+  typedCount: number
 }
 
 export interface SessionData {
@@ -27,11 +34,18 @@ export interface SessionData {
 
 export interface BrowserAnalytics {
   topDomains: DomainStats[]
-  topSites: { url: string; title: string; visitCount: number; domain: string }[]
+  topSites: { url: string; title: string; visitCount: number; domain: string; typedCount: number }[]
   sessions: SessionData[]
   dailyActivity: { date: string; visits: number; duration: number }[]
   hourlyActivity: { hour: number; visits: number; avgDuration: number }[]
   weeklyPattern: { day: string; visits: number; avgDuration: number }[]
+  totalStats: {
+    totalVisits: number
+    totalSites: number
+    totalDomains: number
+    avgVisitsPerSite: number
+    mostTypedSite: string
+  }
 }
 
 export class BrowserHistoryAnalyzer {
@@ -53,11 +67,22 @@ export class BrowserHistoryAnalyzer {
       visits = data.visits
     } else if (data.data && Array.isArray(data.data)) {
       visits = data.data
+    } else if (data.Browser && data.Browser.History && Array.isArray(data.Browser.History)) {
+      visits = data.Browser.History
+    } else if (data.History && Array.isArray(data.History)) {
+      visits = data.History
     } else {
       // Try to find visits in nested structure
       const findVisits = (obj: any): any[] => {
         if (Array.isArray(obj)) return obj
         if (typeof obj === 'object' && obj !== null) {
+          for (const [key, value] of Object.entries(obj)) {
+            if (key.toLowerCase().includes('history') || key.toLowerCase().includes('visit')) {
+              const result = findVisits(value)
+              if (result.length > 0) return result
+            }
+          }
+          // Fallback: try all values
           for (const value of Object.values(obj)) {
             const result = findVisits(value)
             if (result.length > 0) return result
@@ -68,26 +93,47 @@ export class BrowserHistoryAnalyzer {
       visits = findVisits(data)
     }
 
-    return visits.map(visit => ({
-      url: visit.url || visit.URL || '',
-      title: visit.title || visit.Title || visit.url || '',
-      visitTime: visit.visitTime || visit.visit_time || visit.timestamp || visit.time || Date.now(),
-      visitDuration: visit.visitDuration || visit.duration || 0,
-      visitCount: visit.visitCount || visit.visit_count || 1,
-      timestamp: this.parseTimestamp(visit.visitTime || visit.visit_time || visit.timestamp || visit.time)
-    })).filter(visit => visit.url && visit.url.startsWith('http'))
+    return visits.map(visit => {
+      // Handle Chrome's specific timestamp format
+      const visitTime = visit.last_visit_time || visit.visit_time || visit.visitTime || visit.timestamp || Date.now()
+      
+      return {
+        url: visit.url || visit.URL || '',
+        title: visit.title || visit.Title || visit.url || '',
+        visitTime: visitTime,
+        visitDuration: visit.visitDuration || visit.duration || 0,
+        visitCount: visit.visit_count || visit.visitCount || 1,
+        typedCount: visit.typed_count || visit.typedCount || 0,
+        timestamp: this.parseTimestamp(visitTime),
+        id: visit.id,
+        hidden: visit.hidden
+      }
+    }).filter(visit => visit.url && visit.url.startsWith('http'))
   }
 
   private parseTimestamp(time: any): number {
     if (typeof time === 'number') {
-      // Handle Chrome timestamp (microseconds since 1601)
+      // Handle Chrome timestamp (microseconds since January 1, 1601 UTC)
       if (time > 10000000000000) {
-        return (time / 1000) - 11644473600000
+        // Convert Chrome timestamp to JavaScript timestamp
+        // Chrome epoch: January 1, 1601 UTC
+        // JavaScript epoch: January 1, 1970 UTC
+        // Difference: 11644473600 seconds
+        return Math.floor(time / 1000) - 11644473600000
+      }
+      // Handle Unix timestamp in milliseconds
+      if (time > 1000000000000) {
+        return time
+      }
+      // Handle Unix timestamp in seconds
+      if (time > 1000000000) {
+        return time * 1000
       }
       return time
     }
     if (typeof time === 'string') {
-      return new Date(time).getTime()
+      const parsed = new Date(time).getTime()
+      return isNaN(parsed) ? Date.now() : parsed
     }
     return Date.now()
   }
@@ -95,7 +141,7 @@ export class BrowserHistoryAnalyzer {
   private extractDomain(url: string): string {
     try {
       const urlObj = new URL(url)
-      return urlObj.hostname.replace('www.', '')
+      return urlObj.hostname.replace(/^www\./, '')
     } catch {
       return 'unknown'
     }
@@ -140,7 +186,7 @@ export class BrowserHistoryAnalyzer {
     return {
       startTime,
       endTime,
-      duration,
+      duration: Math.max(duration, visits.length * 30000), // Minimum 30 seconds per page
       pageCount: visits.length,
       urls: visits.map(v => v.url)
     }
@@ -157,11 +203,13 @@ export class BrowserHistoryAnalyzer {
         visitCount: 0,
         totalTime: 0,
         lastVisit: new Date(0),
-        urls: []
+        urls: [],
+        typedCount: 0
       }
 
       existing.visitCount += visit.visitCount || 1
       existing.totalTime += visit.visitDuration || 0
+      existing.typedCount += visit.typedCount || 0
       existing.lastVisit = new Date(Math.max(existing.lastVisit.getTime(), visit.timestamp || 0))
       if (!existing.urls.includes(visit.url)) {
         existing.urls.push(visit.url)
@@ -175,16 +223,18 @@ export class BrowserHistoryAnalyzer {
       .slice(0, 20)
 
     // Analyze top sites
-    const siteMap = new Map<string, { url: string; title: string; visitCount: number; domain: string }>()
+    const siteMap = new Map<string, { url: string; title: string; visitCount: number; domain: string; typedCount: number }>()
     
     this.visits.forEach(visit => {
       const existing = siteMap.get(visit.url) || {
         url: visit.url,
         title: visit.title,
         visitCount: 0,
-        domain: this.extractDomain(visit.url)
+        domain: this.extractDomain(visit.url),
+        typedCount: 0
       }
       existing.visitCount += visit.visitCount || 1
+      existing.typedCount += visit.typedCount || 0
       siteMap.set(visit.url, existing)
     })
 
@@ -200,7 +250,7 @@ export class BrowserHistoryAnalyzer {
     this.visits.forEach(visit => {
       const date = new Date(visit.timestamp || 0).toISOString().split('T')[0]
       const existing = dailyMap.get(date) || { visits: 0, duration: 0 }
-      existing.visits += 1
+      existing.visits += visit.visitCount || 1
       existing.duration += visit.visitDuration || 0
       dailyMap.set(date, existing)
     })
@@ -214,37 +264,49 @@ export class BrowserHistoryAnalyzer {
     this.visits.forEach(visit => {
       const hour = new Date(visit.timestamp || 0).getHours()
       const existing = hourlyMap.get(hour) || { visits: 0, totalDuration: 0 }
-      existing.visits += 1
+      existing.visits += visit.visitCount || 1
       existing.totalDuration += visit.visitDuration || 0
       hourlyMap.set(hour, existing)
     })
 
-    const hourlyActivity = Array.from(hourlyMap.entries())
-      .map(([hour, stats]) => ({
+    const hourlyActivity = Array.from({ length: 24 }, (_, hour) => {
+      const stats = hourlyMap.get(hour) || { visits: 0, totalDuration: 0 }
+      return {
         hour,
         visits: stats.visits,
         avgDuration: stats.visits > 0 ? stats.totalDuration / stats.visits : 0
-      }))
-      .sort((a, b) => a.hour - b.hour)
+      }
+    })
 
     // Weekly pattern
     const weeklyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
       const dayOfWeek = new Date(visit.timestamp || 0).getDay()
       const existing = weeklyMap.get(dayOfWeek) || { visits: 0, totalDuration: 0 }
-      existing.visits += 1
+      existing.visits += visit.visitCount || 1
       existing.totalDuration += visit.visitDuration || 0
       weeklyMap.set(dayOfWeek, existing)
     })
 
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    const weeklyPattern = Array.from(weeklyMap.entries())
-      .map(([dayNum, stats]) => ({
-        day: dayNames[dayNum],
+    const weeklyPattern = dayNames.map((day, index) => {
+      const stats = weeklyMap.get(index) || { visits: 0, totalDuration: 0 }
+      return {
+        day,
         visits: stats.visits,
         avgDuration: stats.visits > 0 ? stats.totalDuration / stats.visits : 0
-      }))
-      .sort((a, b) => dayNames.indexOf(a.day) - dayNames.indexOf(b.day))
+      }
+    })
+
+    // Calculate total stats
+    const totalVisits = this.visits.reduce((sum, visit) => sum + (visit.visitCount || 1), 0)
+    const totalSites = new Set(this.visits.map(v => v.url)).size
+    const totalDomains = topDomains.length
+    const avgVisitsPerSite = totalSites > 0 ? totalVisits / totalSites : 0
+    const mostTypedSite = topSites.reduce((max, site) => 
+      site.typedCount > max.typedCount ? site : max, 
+      { typedCount: 0, url: 'None' }
+    ).url
 
     return {
       topDomains,
@@ -252,7 +314,14 @@ export class BrowserHistoryAnalyzer {
       sessions,
       dailyActivity,
       hourlyActivity,
-      weeklyPattern
+      weeklyPattern,
+      totalStats: {
+        totalVisits,
+        totalSites,
+        totalDomains,
+        avgVisitsPerSite,
+        mostTypedSite
+      }
     }
   }
 }

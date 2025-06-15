@@ -126,6 +126,10 @@ export const BrowserHistoryCharts: React.FC = () => {
     : 0
   const totalVisits = analytics.topSites.reduce((sum, site) => sum + site.visitCount, 0)
   const topDomain = analytics.topDomains[0]
+  const mostTypedSite = analytics.topSites.reduce((max, site) => 
+    site.typedCount > max.typedCount ? site : max, 
+    { typedCount: 0, url: 'None', title: 'None' }
+  )
   const longestSession = Math.max(...analytics.sessions.map(s => s.duration))
   const mostActiveHour = analytics.hourlyActivity.reduce((max, hour) => 
     hour.visits > max.visits ? hour : max, analytics.hourlyActivity[0] || { hour: 0, visits: 0 }
@@ -157,7 +161,7 @@ export const BrowserHistoryCharts: React.FC = () => {
     {
       title: "Favorite Website",
       value: topDomain?.domain || "N/A",
-      subtitle: `${topDomain?.visitCount || 0} visits to this domain`,
+      subtitle: `${topDomain?.visitCount || 0} visits • ${topDomain?.urls.length || 0} pages`,
       icon: <Heart className="h-6 w-6 text-white" />,
       color: "bg-red-500",
       trend: "Most visited"
@@ -238,11 +242,13 @@ export const BrowserHistoryCharts: React.FC = () => {
     },
     {
       title: "Web Diversity",
-      value: Math.round(uniqueDomains / totalSessions * 10) / 10,
-      subtitle: "Different sites per session",
+      value: mostTypedSite.url.includes('://') 
+        ? new URL(mostTypedSite.url).hostname.replace('www.', '') 
+        : mostTypedSite.title.slice(0, 20),
+      subtitle: `${mostTypedSite.typedCount} times typed directly`,
       icon: <Sparkles className="h-6 w-6 text-white" />,
       color: "bg-violet-500",
-      trend: "Exploration"
+      trend: "Typed directly"
     }
   ]
 
@@ -316,6 +322,10 @@ export const BrowserHistoryCharts: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Unique Pages:</span>
                       <span className="font-bold">{topDomain?.urls.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Typed Count:</span>
+                      <span className="font-bold">{topDomain?.typedCount}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
                       <div 
@@ -475,7 +485,7 @@ export const BrowserHistoryCharts: React.FC = () => {
                       <div className="text-right">
                         <Badge variant="secondary">{domain.visitCount} visits</Badge>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Last: {domain.lastVisit.toLocaleDateString()}
+                          {domain.urls.length} pages • {domain.typedCount} typed
                         </p>
                       </div>
                     </div>
