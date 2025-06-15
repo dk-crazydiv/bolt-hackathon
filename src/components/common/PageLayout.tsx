@@ -132,26 +132,80 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <h1 className="text-3xl font-bold mb-2">{title}</h1>
         <p className="text-muted-foreground text-lg mb-4">{description}</p>
         
-        {hasAnyData && (
-          <Accordion type="multiple" className="w-full space-y-2">
-            {/* Main data file accordion */}
-            {currentData && renderFileAccordion(
-              currentData, 
-              pageId, 
-              `${title} Data Uploaded`,
-              `Primary ${title.toLowerCase()} data file is loaded and ready for analysis`
+      </div>
+
+      {/* Compact file status next to title */}
+      {hasAnyData && (
+        <div className="mb-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Main data file status */}
+            {currentData && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                  {title} Data Loaded
+                </span>
+                <Badge variant="outline" className="text-xs">
+                  {currentData.metadata.totalRecords.toLocaleString()} records
+                </Badge>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDebugJson(currentData)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    <Bug className="h-3 w-3 mr-1" />
+                    Debug
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleClearData(pageId)}
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Clear
+                  </Button>
+                </div>
+              </div>
             )}
             
-            {/* Device info accordion for browser history page */}
-            {pageId === 'browserHistory' && deviceData && renderFileAccordion(
-              deviceData,
-              'deviceInfo',
-              'Device Information Uploaded',
-              'Device data enables cross-device browsing analysis and device-wise insights'
+            {/* Device info status for browser history page */}
+            {pageId === 'browserHistory' && deviceData && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                <Smartphone className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Device Info Loaded
+                </span>
+                <Badge variant="outline" className="text-xs">
+                  {deviceData.metadata.totalRecords.toLocaleString()} devices
+                </Badge>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDebugJson(deviceData)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    <Bug className="h-3 w-3 mr-1" />
+                    Debug
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleClearData('deviceInfo')}
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Clear
+                  </Button>
+                </div>
+              </div>
             )}
-          </Accordion>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
 
       {!hasAnyData ? (
         <div className="space-y-6">
