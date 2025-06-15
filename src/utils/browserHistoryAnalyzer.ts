@@ -307,20 +307,33 @@ export class BrowserHistoryAnalyzer {
   private groupVisitsBySession(visits: ChromeVisit[], sessionGapMinutes = 30): SessionData[] {
     if (visits.length === 0) return []
 
-    const sortedVisits = [...visits].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    // Sort visits by timestamp
+    const sortedVisits = [...visits]
+      .filter(visit => visit.timestamp && visit.timestamp > 0)
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    
+    console.log('Sorted visits for session analysis:', sortedVisits.length)
+    if (sortedVisits.length === 0) return []
+    
     const sessions: SessionData[] = []
     let currentSession: ChromeVisit[] = [sortedVisits[0]]
 
     for (let i = 1; i < sortedVisits.length; i++) {
       const currentVisit = sortedVisits[i]
       const lastVisit = currentSession[currentSession.length - 1]
-      const timeDiff = ((currentVisit.timestamp || 0) - (lastVisit.timestamp || 0)) / (1000 * 60) // minutes
+      
+      // Calculate time difference in minutes
+      const timeDiffMs = (currentVisit.timestamp || 0) - (lastVisit.timestamp || 0)
+      const timeDiffMinutes = timeDiffMs / (1000 * 60)
+      
+      console.log(`Visit ${i}: Time diff = ${timeDiffMinutes.toFixed(2)} minutes`)
 
-      if (timeDiff <= sessionGapMinutes) {
+      if (timeDiffMinutes <= sessionGapMinutes && timeDiffMinutes >= 0) {
         currentSession.push(currentVisit)
       } else {
         // End current session and start new one
         if (currentSession.length > 0) {
+          console.log(`Creating session with ${currentSession.length} visits`)
           sessions.push(this.createSessionData(currentSession))
         }
         currentSession = [currentVisit]
@@ -329,23 +342,47 @@ export class BrowserHistoryAnalyzer {
 
     // Add the last session
     if (currentSession.length > 0) {
+      console.log(`Creating final session with ${currentSession.length} visits`)
       sessions.push(this.createSessionData(currentSession))
     }
 
+    console.log(`Total sessions created: ${sessions.length}`)
     return sessions
   }
 
   private createSessionData(visits: ChromeVisit[]): SessionData {
-    const startTime = new Date(visits[0].timestamp || 0)
-    const endTime = new Date(visits[visits.length - 1].timestamp || 0)
-    const duration = endTime.getTime() - startTime.getTime()
+    if (visits.length === 0) {
+      return {
+        startTime: new Date(),
+        endTime: new Date(),
+        duration: 0,
+        pageCount: 0,
+        urls: []
+      }
+    }
+    
+    const sortedVisits = visits.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    const startTime = new Date(sortedVisits[0].timestamp || 0)
+    const endTime = new Date(sortedVisits[sortedVisits.length - 1].timestamp || 0)
+    
+    // Calculate actual duration or use minimum duration
+    let duration = endTime.getTime() - startTime.getTime()
+    
+    // If duration is 0 or negative, estimate based on page count
+    if (duration <= 0) {
+      duration = visits.length * 60000 // 1 minute per page minimum
+    }
+    
+    // Ensure minimum duration of 30 seconds per page
+    const minDuration = visits.length * 30000
+    duration = Math.max(duration, minDuration)
 
     return {
       startTime,
       endTime,
-      duration: Math.max(duration, visits.length * 30000), // Minimum 30 seconds per page
+      duration,
       pageCount: visits.length,
-      urls: visits.map(v => v.url)
+      urls: visits.map(v => v.url).filter(url => url)
     }
   }
 
