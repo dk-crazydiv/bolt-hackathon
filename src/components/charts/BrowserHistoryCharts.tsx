@@ -78,9 +78,31 @@ export const BrowserHistoryCharts: React.FC = () => {
     try {
       console.log('Raw data structure:', data)
       console.log('Data.data structure:', data.data)
+      console.log('Data.data type:', typeof data.data)
+      console.log('Data.data keys:', Object.keys(data.data || {}))
+      
+      // Log the actual structure we're passing to analyzer
+      if (data.data && data.data["Browser History"]) {
+        console.log('Browser History in data.data:', data.data["Browser History"])
+        console.log('Browser History type:', typeof data.data["Browser History"])
+        if (Array.isArray(data.data["Browser History"])) {
+          console.log('Browser History array length:', data.data["Browser History"].length)
+          console.log('First Browser History item:', data.data["Browser History"][0])
+        } else if (typeof data.data["Browser History"] === 'object') {
+          console.log('Browser History object keys:', Object.keys(data.data["Browser History"]))
+          for (const [key, value] of Object.entries(data.data["Browser History"])) {
+            console.log(`Browser History.${key}:`, Array.isArray(value) ? `Array[${value.length}]` : typeof value)
+            if (Array.isArray(value) && value.length > 0) {
+              console.log(`Sample from Browser History.${key}:`, value[0])
+            }
+          }
+        }
+      }
+      
       const analyzer = new BrowserHistoryAnalyzer(data.data)
       const result = analyzer.analyze()
       console.log('Analytics result:', result)
+      console.log('Analytics visits processed:', result.totalStats.totalVisits)
       return result
     } catch (error) {
       console.error('Error analyzing browser history:', error)
