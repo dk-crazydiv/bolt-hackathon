@@ -75,13 +75,8 @@ export const useDataStore = create<DataState>()(
     {
       name: 'data-explorer-storage',
       partialize: (state) => ({
-        googleMapsTimelineData: state.googleMapsTimelineData,
-        browserHistoryData: state.browserHistoryData,
-        youtubeHistoryData: state.youtubeHistoryData,
-        playstoreAppsData: state.playstoreAppsData,
-        fitbitData: state.fitbitData,
-        googleMapReviewsData: state.googleMapReviewsData,
-        debugJsonData: state.debugJsonData,
+        // Only persist non-data state to avoid localStorage quota issues
+        // Large parsed data objects are excluded from persistence
       }),
     }
   )
