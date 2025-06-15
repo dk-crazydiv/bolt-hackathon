@@ -78,6 +78,9 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       console.log('✅ Analysis result:', result)
       console.log('📈 Top sites count:', result.topSites?.length || 0)
       console.log('🌐 Top domains count:', result.topDomains?.length || 0)
+      console.log('📊 Daily activity count:', result.dailyActivity?.length || 0)
+      console.log('📊 Hourly activity sample:', result.hourlyActivity?.slice(0, 3) || [])
+      console.log('📊 Sample daily activity:', result.dailyActivity?.slice(0, 3) || [])
       return result;
     }
     
