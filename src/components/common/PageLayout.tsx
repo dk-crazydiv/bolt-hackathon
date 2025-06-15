@@ -321,8 +321,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           showUpload ? "opacity-100 transform translate-y-0" : "opacity-100 transform translate-y-0",
           isTransitioning && !showUpload && "opacity-0 transform translate-y-4"
         )}>
-          {/* No data state - show click to upload message */}
-          {!hasAnyData && (
+          {/* No data state - show click to upload message - only when NOT in upload mode */}
+          {!hasAnyData && !showUpload && (
             <Card 
               className={cn(
                 "border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg",
@@ -345,8 +345,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             </Card>
           )}
           
-          {/* Show formats and examples when no data or in upload mode */}
-          {(!hasAnyData && showUpload) && (
+          {/* Show formats and examples only when in upload mode and no data exists */}
+          {!hasAnyData && showUpload && (
             <div className={cn(
               "grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-500 ease-in-out",
               showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
@@ -396,8 +396,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             </div>
           )}
           
-          {/* Show upload interface when no data and showUpload is true, or when data exists and showUpload is true */}
-          {((!hasAnyData && showUpload) || (hasAnyData && showUpload)) && (
+          {/* Show upload interface when showUpload is true */}
+          {showUpload && (
             <div className={cn(
               "transition-all duration-500 ease-in-out",
               showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
