@@ -348,51 +348,47 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           {/* Show formats and examples only when in upload mode and no data exists */}
           {!hasAnyData && showUpload && (
             <div className={cn(
-              "grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-500 ease-in-out",
+              "space-y-4 transition-all duration-500 ease-in-out",
               showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
             )}>
-              <Card className="transition-all duration-300 hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-primary" />
-                    Accepted File Formats
-                  </CardTitle>
-                  <CardDescription>
-                    Upload files in any of these supported formats
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+              {/* Compact info panels */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Accepted formats panel */}
+                <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Database className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-medium text-blue-800 dark:text-blue-200">Accepted Formats</h4>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {acceptedFormats.map((format) => (
-                      <Badge key={format} variant="secondary" className="text-sm transition-all duration-200 hover:scale-105">
+                      <Badge key={format} variant="outline" className="text-xs border-blue-300 text-blue-700 dark:text-blue-300">
                         {format}
                       </Badge>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="transition-all duration-300 hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    Data Examples
-                  </CardTitle>
-                  <CardDescription>
-                    Examples of data sources that work with this analyzer
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {examples.map((example, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm transition-all duration-200 hover:translate-x-1">
-                        <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                </div>
+                
+                {/* Data examples panel */}
+                <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <h4 className="font-medium text-green-800 dark:text-green-200">Data Examples</h4>
+                  </div>
+                  <ul className="space-y-1">
+                    {examples.slice(0, 3).map((example, index) => (
+                      <li key={index} className="flex items-start gap-2 text-xs text-green-700 dark:text-green-300">
+                        <span className="w-1 h-1 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
                         <span>{example}</span>
                       </li>
                     ))}
+                    {examples.length > 3 && (
+                      <li className="text-xs text-green-600 dark:text-green-400 italic">
+                        +{examples.length - 3} more formats supported
+                      </li>
+                    )}
                   </ul>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           )}
           
