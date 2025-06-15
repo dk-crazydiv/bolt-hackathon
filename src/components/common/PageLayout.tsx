@@ -346,52 +346,6 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           )}
           
           {/* Show formats and examples only when in upload mode and no data exists */}
-          {!hasAnyData && showUpload && (
-            <div className={cn(
-              "space-y-4 transition-all duration-500 ease-in-out",
-              showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
-            )}>
-              {/* Compact info panels */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Accepted formats panel */}
-                <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Database className="h-4 w-4 text-blue-600" />
-                    <h4 className="font-medium text-blue-800 dark:text-blue-200">Accepted Formats</h4>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {acceptedFormats.map((format) => (
-                      <Badge key={format} variant="outline" className="text-xs border-blue-300 text-blue-700 dark:text-blue-300">
-                        {format}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Data examples panel */}
-                <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <h4 className="font-medium text-green-800 dark:text-green-200">Data Examples</h4>
-                  </div>
-                  <ul className="space-y-1">
-                    {examples.slice(0, 3).map((example, index) => (
-                      <li key={index} className="flex items-start gap-2 text-xs text-green-700 dark:text-green-300">
-                        <span className="w-1 h-1 bg-green-600 rounded-full mt-1.5 flex-shrink-0" />
-                        <span>{example}</span>
-                      </li>
-                    ))}
-                    {examples.length > 3 && (
-                      <li className="text-xs text-green-600 dark:text-green-400 italic">
-                        +{examples.length - 3} more formats supported
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-          
           {/* Show upload interface when showUpload is true */}
           {showUpload && (
             <div className={cn(
@@ -404,6 +358,49 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                 customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
               />
               {additionalUpload}
+              
+              {/* Compact info panel below upload */}
+              {!hasAnyData && (
+                <div className="mt-6 p-4 bg-muted/30 border border-muted rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Accepted formats */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Database className="h-3 w-3 text-muted-foreground" />
+                        <h4 className="text-sm font-medium text-muted-foreground">Accepted Formats</h4>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {acceptedFormats.map((format) => (
+                          <Badge key={format} variant="outline" className="text-xs h-5">
+                            {format}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Data examples */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="h-3 w-3 text-muted-foreground" />
+                        <h4 className="text-sm font-medium text-muted-foreground">Data Examples</h4>
+                      </div>
+                      <ul className="space-y-0.5">
+                        {examples.slice(0, 2).map((example, index) => (
+                          <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
+                            <span className="w-1 h-1 bg-muted-foreground rounded-full mt-1.5 flex-shrink-0" />
+                            <span>{example}</span>
+                          </li>
+                        ))}
+                        {examples.length > 2 && (
+                          <li className="text-xs text-muted-foreground/70 italic">
+                            +{examples.length - 2} more formats supported
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
