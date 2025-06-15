@@ -1,0 +1,49 @@
+[{
+  "userSetting": {
+    "testingProgramListItem": {
+      "doc": {
+        "documentType": "Android Apps",
+        "title": "Niagara Launcher ‧ Home Screen"
+      }
+    }
+  }
+},
+{
+  "userSetting": {
+    "testingProgramListItem": {
+      "doc": {
+        "documentType": "Android Apps",
+        "title": "Indistract Minimalist Launcher"
+      }
+    }
+  }
+},
+{
+  "userSetting": {
+    "testingProgramListItem": {
+      "doc": {
+        "documentType": "Android Apps",
+        "title": "com.microsoft.cortana.preview"
+      }
+    }
+  }
+},
+{
+  "userSetting": {
+    "marketingPreferences": {
+      "wantsMultiContentEmail": true
+    }
+  }
+},
+{
+  "userSetting": {
+    "marketingPreferences": {
+      "wantsMultiContentEmail": false
+    }
+  }
+},
+{
+  "userSetting": {
+    "userCountryCode": "IN"
+  }
+}]

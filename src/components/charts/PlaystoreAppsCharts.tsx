@@ -3,11 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Smartphone, 
-  Clock, 
-  TrendingUp, 
-  DollarSign, 
+import {
+  Smartphone,
+  Clock,
+  TrendingUp,
+  DollarSign,
   Calendar,
   Star,
   Download,
@@ -17,13 +17,13 @@ import {
   Trophy,
   Activity
 } from 'lucide-react'
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -49,18 +49,23 @@ interface PlayStoreData {
 
 export const PlaystoreAppsCharts: React.FC = () => {
   const { getPageData } = useDataStore()
-  const data = getPageData('playstoreApps')
+  const data = getPageData('playstoreAppsData')
   const [selectedYear, setSelectedYear] = useState<string>('all')
 
   const processedData = useMemo(() => {
     if (!data?.data) return null
 
-    const installs = data.data['Installs.json'] || []
-    const devices = data.data['Devices.json'] || []
-    const library = data.data['Library.json'] || []
-    const orderHistory = data.data['Order History.json'] || []
-    const purchaseHistory = data.data['Purchase History.json'] || []
-    const playSettings = data.data['Play Settings.json'] || []
+    const getData = (filename: string) => {
+      const key = Object.keys(data.data).find(k => k.endsWith(filename))
+      return key ? data.data[key] : []
+    }
+
+    const installs = getData('Installs.json')
+    const devices = getData('Devices.json')
+    const library = getData('Library.json')
+    const orderHistory = getData('Order History.json')
+    const purchaseHistory = getData('Purchase History.json')
+    const playSettings = getData('Play Settings.json')
 
     // Process installs data
     const installsData = installs.map((item: any) => ({
@@ -107,6 +112,8 @@ export const PlaystoreAppsCharts: React.FC = () => {
     }
   }, [data])
 
+  console.log(processedData, data)
+
   const kpiData = useMemo(() => {
     if (!processedData) return null
 
@@ -122,15 +129,15 @@ export const PlaystoreAppsCharts: React.FC = () => {
       return acc
     }, {})
 
-    const mostInstalledYear = Object.entries(installsByYear).reduce((max: any, [year, count]: any) => 
+    const mostInstalledYear = Object.entries(installsByYear).reduce((max: any, [year, count]: any) =>
       count > max.count ? { year, count } : max, { year: 0, count: 0 }
     )
 
     // Fix: Add guard for empty array and provide initial value
-    const oldestApp = processedData.installs.length > 0 
-      ? processedData.installs.reduce((oldest, app) => 
-          app.firstInstall < oldest.firstInstall ? app : oldest
-        )
+    const oldestApp = processedData.installs.length > 0
+      ? processedData.installs.reduce((oldest, app) =>
+        app.firstInstall < oldest.firstInstall ? app : oldest
+      )
       : { title: 'N/A' }
 
     const uniqueDevices = new Set(processedData.devices.map(d => `${d.manufacturer} ${d.model}`)).size
@@ -149,19 +156,19 @@ export const PlaystoreAppsCharts: React.FC = () => {
 
     const monthlyData = processedData.installs.reduce((acc: any, install) => {
       const monthKey = `${install.firstInstall.getFullYear()}-${String(install.firstInstall.getMonth() + 1).padStart(2, '0')}`
-      
+
       if (!acc[monthKey]) {
         acc[monthKey] = { month: monthKey, installs: 0, updates: 0 }
       }
-      
+
       acc[monthKey].installs += 1
-      
+
       // Count updates (when lastUpdate is significantly after firstInstall)
       const daysDiff = (install.lastUpdate.getTime() - install.firstInstall.getTime()) / (1000 * 60 * 60 * 24)
       if (daysDiff > 30) {
         acc[monthKey].updates += 1
       }
-      
+
       return acc
     }, {})
 
@@ -174,14 +181,14 @@ export const PlaystoreAppsCharts: React.FC = () => {
     const categorySpending = processedData.orders.reduce((acc: any, order) => {
       const price = parseFloat(order.totalPrice.replace(/[₹,]/g, '')) || 0
       const category = order.items[0]?.doc?.documentType || 'Other'
-      
+
       const existing = acc.find((item: any) => item.category === category)
       if (existing) {
         existing.amount += price
       } else {
         acc.push({ category, amount: price })
       }
-      
+
       return acc
     }, [])
 
@@ -190,12 +197,12 @@ export const PlaystoreAppsCharts: React.FC = () => {
       .reduce((acc: any, order, index) => {
         const price = parseFloat(order.totalPrice.replace(/[₹,]/g, '')) || 0
         const prevTotal = index > 0 ? acc[index - 1].total : 0
-        
+
         acc.push({
           date: order.creationTime.toISOString().split('T')[0],
           total: prevTotal + price
         })
-        
+
         return acc
       }, [])
 
@@ -257,7 +264,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
             <p className="text-xs text-muted-foreground">Apps installed</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">💰 Total Spend</CardTitle>
@@ -268,7 +275,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
             <p className="text-xs text-muted-foreground">Total spent</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">📅 Peak Year</CardTitle>
@@ -279,7 +286,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
             <p className="text-xs text-muted-foreground">Most installs</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">🏆 Longest App</CardTitle>
@@ -292,7 +299,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
             <p className="text-xs text-muted-foreground">Still installed</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">📱 Devices</CardTitle>
@@ -329,21 +336,21 @@ export const PlaystoreAppsCharts: React.FC = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="installs" 
-                    stackId="1" 
-                    stroke="#3b82f6" 
-                    fill="#3b82f6" 
+                  <Area
+                    type="monotone"
+                    dataKey="installs"
+                    stackId="1"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
                     fillOpacity={0.6}
                     name="New Installs"
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="updates" 
-                    stackId="1" 
-                    stroke="#10b981" 
-                    fill="#10b981" 
+                  <Area
+                    type="monotone"
+                    dataKey="updates"
+                    stackId="1"
+                    stroke="#10b981"
+                    fill="#10b981"
                     fillOpacity={0.6}
                     name="Updates"
                   />
@@ -389,18 +396,18 @@ export const PlaystoreAppsCharts: React.FC = () => {
                 <div className="space-y-2">
                   {['Google', 'Social', 'Finance', 'Shopping', 'Entertainment', 'Productivity']
                     .map(category => {
-                      const count = processedData.installs.filter(app => 
+                      const count = processedData.installs.filter(app =>
                         app.title.toLowerCase().includes(category.toLowerCase())
                       ).length
                       const percentage = processedData.installs.length > 0 ? (count / processedData.installs.length) * 100 : 0
-                      
+
                       return (
                         <div key={category} className="flex items-center justify-between">
                           <span className="text-sm">{category}</span>
                           <div className="flex items-center gap-2">
                             <div className="w-20 bg-muted rounded-full h-2">
-                              <div 
-                                className="bg-primary h-2 rounded-full" 
+                              <div
+                                className="bg-primary h-2 rounded-full"
                                 style={{ width: `${percentage}%` }}
                               />
                             </div>
@@ -457,10 +464,10 @@ export const PlaystoreAppsCharts: React.FC = () => {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip formatter={(value: any) => [`₹${value.toFixed(2)}`, 'Total Spent']} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="total" 
-                      stroke="#3b82f6" 
+                    <Line
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#3b82f6"
                       strokeWidth={2}
                       dot={{ fill: '#3b82f6' }}
                     />
@@ -479,7 +486,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {processedData.orders.filter(o => o.items.some((item: any) => 
+                    {processedData.orders.filter(o => o.items.some((item: any) =>
                       item.doc?.documentType === 'Subscription'
                     )).length}
                   </div>
@@ -582,7 +589,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-muted-foreground">RAM</p>
-                      <p className="font-medium">{(device.totalMemory / (1024**3)).toFixed(1)}GB</p>
+                      <p className="font-medium">{(device.totalMemory / (1024 ** 3)).toFixed(1)}GB</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Carrier</p>
@@ -616,7 +623,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
                   <p className="text-sm font-medium text-blue-700 dark:text-blue-300">📱 Oldest App Still Installed</p>
                   <p className="text-lg font-bold text-blue-900 dark:text-blue-100">{kpiData.longestRetainedApp}</p>
                 </div>
-                
+
                 <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                   <p className="text-sm font-medium text-green-700 dark:text-green-300">🚀 Peak Install Day</p>
                   <p className="text-lg font-bold text-green-900 dark:text-green-100">
@@ -627,7 +634,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
                         acc[date] = (acc[date] || 0) + 1
                         return acc
                       }, {})
-                      const peakDay = Object.entries(installsByDate).reduce((max: any, [date, count]: any) => 
+                      const peakDay = Object.entries(installsByDate).reduce((max: any, [date, count]: any) =>
                         count > max.count ? { date, count } : max, { date: 'N/A', count: 0 }
                       )
                       return peakDay.date
@@ -651,7 +658,7 @@ export const PlaystoreAppsCharts: React.FC = () => {
                 <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
                   <p className="text-sm font-medium text-orange-700 dark:text-orange-300">💰 Biggest Single Purchase</p>
                   <p className="text-lg font-bold text-orange-900 dark:text-orange-100">
-                    ₹{processedData.orders.length > 0 
+                    ₹{processedData.orders.length > 0
                       ? Math.max(...processedData.orders.map(o => parseFloat(o.totalPrice.replace(/[₹,]/g, '') || '0'))).toFixed(2)
                       : '0.00'
                     }
@@ -676,8 +683,8 @@ export const PlaystoreAppsCharts: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Social Media</span>
                     <span className="text-sm font-medium">
-                      {processedData.installs.filter(app => 
-                        ['whatsapp', 'instagram', 'facebook', 'twitter', 'linkedin', 'telegram'].some(social => 
+                      {processedData.installs.filter(app =>
+                        ['whatsapp', 'instagram', 'facebook', 'twitter', 'linkedin', 'telegram'].some(social =>
                           app.title.toLowerCase().includes(social)
                         )
                       ).length} apps
@@ -686,8 +693,8 @@ export const PlaystoreAppsCharts: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Finance Apps</span>
                     <span className="text-sm font-medium">
-                      {processedData.installs.filter(app => 
-                        ['bank', 'pay', 'wallet', 'finance', 'money', 'trading'].some(finance => 
+                      {processedData.installs.filter(app =>
+                        ['bank', 'pay', 'wallet', 'finance', 'money', 'trading'].some(finance =>
                           app.title.toLowerCase().includes(finance)
                         )
                       ).length} apps
@@ -696,8 +703,8 @@ export const PlaystoreAppsCharts: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Entertainment</span>
                     <span className="text-sm font-medium">
-                      {processedData.installs.filter(app => 
-                        ['netflix', 'youtube', 'spotify', 'music', 'video', 'game'].some(entertainment => 
+                      {processedData.installs.filter(app =>
+                        ['netflix', 'youtube', 'spotify', 'music', 'video', 'game'].some(entertainment =>
                           app.title.toLowerCase().includes(entertainment)
                         )
                       ).length} apps
@@ -725,29 +732,29 @@ export const PlaystoreAppsCharts: React.FC = () => {
                     return acc
                   }, {})
                 )
-                .sort(([a], [b]) => parseInt(b) - parseInt(a))
-                .slice(0, 5)
-                .map(([year, apps]: [string, any]) => (
-                  <div key={year} className="border-l-2 border-primary pl-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="default">{year}</Badge>
-                      <span className="text-sm text-muted-foreground">{apps.length} apps installed</span>
+                  .sort(([a], [b]) => parseInt(b) - parseInt(a))
+                  .slice(0, 5)
+                  .map(([year, apps]: [string, any]) => (
+                    <div key={year} className="border-l-2 border-primary pl-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="default">{year}</Badge>
+                        <span className="text-sm text-muted-foreground">{apps.length} apps installed</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {apps.slice(0, 6).map((app: any, index: number) => (
+                          <div key={index} className="text-xs p-2 bg-muted rounded">
+                            <p className="font-medium truncate">{app.title}</p>
+                            <p className="text-muted-foreground">{app.firstInstall.toLocaleDateString()}</p>
+                          </div>
+                        ))}
+                        {apps.length > 6 && (
+                          <div className="text-xs p-2 bg-muted rounded flex items-center justify-center">
+                            <span className="text-muted-foreground">+{apps.length - 6} more</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {apps.slice(0, 6).map((app: any, index: number) => (
-                        <div key={index} className="text-xs p-2 bg-muted rounded">
-                          <p className="font-medium truncate">{app.title}</p>
-                          <p className="text-muted-foreground">{app.firstInstall.toLocaleDateString()}</p>
-                        </div>
-                      ))}
-                      {apps.length > 6 && (
-                        <div className="text-xs p-2 bg-muted rounded flex items-center justify-center">
-                          <span className="text-muted-foreground">+{apps.length - 6} more</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </CardContent>
           </Card>

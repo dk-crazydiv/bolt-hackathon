@@ -1,0 +1,30 @@
+[{
+  "promotionHistory": {
+    "instanceContext": {
+      "country": "IN",
+      "document": {
+        "title": "$0.99 for any movie rental"
+      },
+      "totalQuantity": "1",
+      "expiryTime": "2018-07-12T04:42:27.547Z"
+    },
+    "promotionHistory": {
+      "promotionState": [{
+        "status": "ACTIVE",
+        "timestamp": "2018-06-21T04:42:28.400Z",
+        "device": {
+          "model": "",
+          "carrier": "",
+          "manufacturer": "",
+          "deviceDisplayName": ""
+        },
+        "userCountry": "IN",
+        "userLocale": {
+          "languageCode": "en_GB",
+          "country": "IN"
+        }
+      }]
+    },
+    "lastModificationTime": "2022-10-24T20:01:58.057339Z"
+  }
+}]
