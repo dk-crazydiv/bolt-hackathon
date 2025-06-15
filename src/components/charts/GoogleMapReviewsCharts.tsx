@@ -1,12 +1,18 @@
-import React from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import React, { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '../ui/badge'
 import { Star, Clock, TrendingUp } from 'lucide-react'
-import { useDataStore } from '@/store/dataStore'
+import { useDataStore } from '../../store/dataStore'
+import { RatingTrendChart } from './google-maps-reviews/RatingTrendChart'
+import { ReviewsByLocationChart } from './google-maps-reviews/ReviewsByLocationChart'
+import { ReviewsByCityStateChart } from './google-maps-reviews/ReviewsByCityStateChart'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Button } from '../ui/button'
 
 export const GoogleMapReviewsCharts: React.FC = () => {
   const { getPageData } = useDataStore()
   const data = getPageData('googleMapReviews')
+  const [cityStateGroupBy, setCityStateGroupBy] = useState<'city' | 'state'>('city')
 
   if (!data) {
     return (
@@ -59,28 +65,61 @@ export const GoogleMapReviewsCharts: React.FC = () => {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Google Map Reviews Analysis</CardTitle>
-          <CardDescription>
-            Advanced charts and visualizations for your review data will be implemented here.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12">
-            <Star className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
-              Review analysis features coming soon:
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Badge variant="outline">Rating distribution</Badge>
-              <Badge variant="outline">Review timeline</Badge>
-              <Badge variant="outline">Business categories</Badge>
-              <Badge variant="outline">Location analysis</Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="rating-trend">
+        <TabsList>
+          <TabsTrigger value="rating-trend">Rating Trend</TabsTrigger>
+          <TabsTrigger value="reviews-by-country">Reviews by Country</TabsTrigger>
+          <TabsTrigger value="reviews-by-city-state">Reviews by City/State</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="rating-trend">
+          <Card>
+            <CardHeader>
+              <CardTitle>Rating Distribution Over Time</CardTitle>
+              <CardDescription>
+                **Q1: How has your rating trended over time?** This chart shows the distribution of your five-star review ratings per month.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RatingTrendChart data={data.data} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="reviews-by-country">
+          <Card>
+            <CardHeader>
+              <CardTitle>Reviews per Country</CardTitle>
+              <CardDescription>
+                **Q2: How many reviews have you given per country?** This chart shows the count of your reviews grouped by the country.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ReviewsByLocationChart data={data.data} groupBy="country" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reviews-by-city-state">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Reviews by {cityStateGroupBy === 'city' ? 'City' : 'State'}</CardTitle>
+                <CardDescription>
+                  **Q2 (Detail): What are your most reviewed cities and states?** This chart parses the address to group reviews.
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant={cityStateGroupBy === 'city' ? 'default' : 'outline'} onClick={() => setCityStateGroupBy('city')}>Group by City</Button>
+                <Button variant={cityStateGroupBy === 'state' ? 'default' : 'outline'} onClick={() => setCityStateGroupBy('state')}>Group by State</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ReviewsByCityStateChart data={data.data} groupBy={cityStateGroupBy} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
