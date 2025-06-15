@@ -131,7 +131,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
       {!currentData ? (
         <div className="space-y-6">
-          <DropZone pageId={pageId} />
+          <DropZone 
+            pageId={pageId}
+            customTitle={pageId === 'browserHistory' ? 'Upload Browser History Data' : undefined}
+            customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
+          />
           {additionalUpload}
         </div>
       ) : (
@@ -146,7 +150,14 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           </TabsContent>
           
           <TabsContent value="upload" className="mt-6">
-            <DropZone pageId={pageId} />
+            <div className="space-y-6">
+              <DropZone 
+                pageId={pageId}
+                customTitle={pageId === 'browserHistory' ? 'Upload New Browser History Data' : undefined}
+                customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
+              />
+              {additionalUpload}
+            </div>
           </TabsContent>
         </Tabs>
       )}

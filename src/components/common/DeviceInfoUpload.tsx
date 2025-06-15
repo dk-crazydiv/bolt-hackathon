@@ -39,8 +39,8 @@ export const DeviceInfoUpload: React.FC = () => {
       <div>
         <h3 className="text-lg font-semibold mb-2">📱 Device Information (Optional)</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Upload your device-information.json file to enable device-wise browsing analysis. 
-          This will show which devices you use for browsing and their usage patterns.
+          Upload your device-information.json file from Google Takeout to enable device-wise browsing analysis. 
+          This will show which devices you use for browsing and their usage patterns. Make sure to upload your browser history data first.
         </p>
       </div>
 

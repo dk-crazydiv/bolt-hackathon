@@ -10,9 +10,11 @@ import { cn } from '@/lib/utils'
 
 interface DropZoneProps {
   pageId: string
+  customTitle?: string
+  customDescription?: string
 }
 
-export const DropZone: React.FC<DropZoneProps> = ({ pageId }) => {
+export const DropZone: React.FC<DropZoneProps> = ({ pageId, customTitle, customDescription }) => {
   const { parseFile, cancelParsing } = useFileParser()
   const { parseProgress, isLoading } = useDataStore()
 
@@ -58,11 +60,11 @@ export const DropZone: React.FC<DropZoneProps> = ({ pageId }) => {
           </div>
           
           <CardTitle className="mb-2">
-            {isDragActive ? 'Drop your file here' : 'Upload your data file'}
+            {isDragActive ? 'Drop your file here' : (customTitle || 'Upload your data file')}
           </CardTitle>
           
           <CardDescription className="mb-4 max-w-sm">
-            Drag and drop your file here, or click to browse. Supports large files (100MB+).
+            {customDescription || 'Drag and drop your file here, or click to browse. Supports large files (100MB+).'}
           </CardDescription>
           
           <div className="flex flex-wrap gap-2 justify-center">
