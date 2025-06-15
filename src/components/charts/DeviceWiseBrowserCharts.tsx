@@ -54,15 +54,33 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
 }) => {
   const [selectedDeviceType, setSelectedDeviceType] = useState<'all' | 'mobile' | 'tablet' | 'laptop'>('all')
 
+  // Debug logging
+  console.log('🔍 DeviceWiseBrowserCharts received data:', {
+    deviceData: deviceData ? 'Present' : 'Missing',
+    browserData: browserData ? 'Present' : 'Missing',
+    deviceDataType: typeof deviceData,
+    browserDataType: typeof browserData,
+    deviceDataKeys: deviceData ? Object.keys(deviceData) : 'N/A',
+    browserDataKeys: browserData ? Object.keys(browserData) : 'N/A'
+  })
+
   const analysis = useMemo(() => {
-    if (!deviceData || !browserData) return null
+    if (!deviceData || !browserData) {
+      console.log('❌ Missing data for device analysis:', {
+        hasDeviceData: !!deviceData,
+        hasBrowserData: !!browserData
+      })
+      return null
+    }
     
     console.log('🔍 DeviceWiseBrowserCharts: Processing data...')
     console.log('Device data:', deviceData)
     console.log('Browser data:', browserData)
     
     const analyzer = new DeviceAnalyzer(deviceData, browserData)
-    return analyzer.analyzeDeviceUsage()
+    const result = analyzer.analyzeDeviceUsage()
+    console.log('✅ Device analysis result:', result)
+    return result
   }, [deviceData, browserData])
 
   if (!analysis) {
@@ -74,13 +92,18 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
             <CardTitle className="mb-2">No device data available</CardTitle>
             <CardDescription>
               Upload device information file to see device-wise analysis.
-              {!deviceData && (
-                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded text-yellow-700 dark:text-yellow-300 text-sm">
-                  Device data: {deviceData ? 'Available' : 'Missing'}
-                  <br />
-                  Browser data: {browserData ? 'Available' : 'Missing'}
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950 rounded text-yellow-700 dark:text-yellow-300 text-sm">
+                <div className="space-y-1">
+                  <div>Device data: {deviceData ? '✅ Available' : '❌ Missing'}</div>
+                  <div>Browser data: {browserData ? '✅ Available' : '❌ Missing'}</div>
+                  {deviceData && (
+                    <div>Device records: {Array.isArray(deviceData) ? deviceData.length : 'Not an array'}</div>
+                  )}
+                  {browserData && (
+                    <div>Browser records: {Array.isArray(browserData) ? browserData.length : 'Not an array'}</div>
+                  )}
                 </div>
-              )}
+              </div>
             </CardDescription>
           </div>
         </CardContent>

@@ -63,12 +63,16 @@ export class DeviceAnalyzer {
     this.visits = this.parseBrowserHistory(browserData)
     console.log('🔍 DeviceAnalyzer initialized:', {
       devices: this.devices.length,
-      visits: this.visits.length
+      visits: this.visits.length,
+      deviceSample: this.devices[0],
+      visitSample: this.visits[0]
     })
   }
 
   private parseDevices(data: any): DeviceInfo[] {
     console.log('📱 Parsing device data:', data)
+    console.log('📱 Device data type:', typeof data)
+    console.log('📱 Device data is array:', Array.isArray(data))
     
     if (!data) return []
     
@@ -76,20 +80,25 @@ export class DeviceAnalyzer {
     
     // Handle different data structures
     if (Array.isArray(data)) {
+      console.log('📱 Data is already an array')
       deviceArray = data
     } else if (data["Device Info"] && Array.isArray(data["Device Info"])) {
+      console.log('📱 Found Device Info array')
       deviceArray = data["Device Info"]
     } else if (data.deviceInfo && Array.isArray(data.deviceInfo)) {
+      console.log('📱 Found deviceInfo array')
       deviceArray = data.deviceInfo
     } else if (data.devices && Array.isArray(data.devices)) {
-      deviceArray = data.devices
-    } else if (data.devices && Array.isArray(data.devices)) {
+      console.log('📱 Found devices array')
       deviceArray = data.devices
     } else if (typeof data === 'object') {
+      console.log('📱 Searching object for device arrays...')
       // Look for arrays in the object
       for (const [key, value] of Object.entries(data)) {
+        console.log(`📱 Checking key "${key}":`, Array.isArray(value) ? `Array[${value.length}]` : typeof value)
         if (Array.isArray(value) && value.length > 0) {
           const sample = value[0]
+          console.log(`📱 Sample from ${key}:`, sample)
           if (sample && (sample.cache_guid || sample.device_type || sample.manufacturer)) {
             console.log(`📱 Found device array at key "${key}":`, value.length, 'devices')
             deviceArray = value
@@ -104,7 +113,7 @@ export class DeviceAnalyzer {
       console.log('📱 Sample device:', deviceArray[0])
     }
 
-    return deviceArray.map(device => ({
+    const parsedDevices = deviceArray.map(device => ({
       cache_guid: device.cache_guid || device.cacheGuid || '',
       device_type: device.device_type || device.deviceType || 'unknown',
       device_form_factor: device.device_form_factor || device.deviceFormFactor || 'unknown',
@@ -115,31 +124,57 @@ export class DeviceAnalyzer {
       os_type: device.os_type || device.osType || 'unknown',
       last_updated_timestamp: device.last_updated_timestamp || device.lastUpdatedTimestamp || 0
     }))
+    
+    console.log('📱 Parsed devices:', parsedDevices.length, 'devices')
+    if (parsedDevices.length > 0) {
+      console.log('📱 First parsed device:', parsedDevices[0])
+    }
+    
+    return parsedDevices
   }
 
   private parseBrowserHistory(data: any): any[] {
+    console.log('🌐 Parsing browser history data:', typeof data, Array.isArray(data))
     if (!data) return []
     
     // Use similar logic as BrowserHistoryAnalyzer
     let visits: any[] = []
     
     if (Array.isArray(data)) {
+      console.log('🌐 Browser data is already an array')
       visits = data
     } else if (data["Browser History"]) {
+      console.log('🌐 Found Browser History key')
       const browserHistory = data["Browser History"]
       if (Array.isArray(browserHistory)) {
+        console.log('🌐 Browser History is array')
         visits = browserHistory
       } else if (typeof browserHistory === 'object') {
+        console.log('🌐 Browser History is object, searching for arrays...')
         for (const [key, value] of Object.entries(browserHistory)) {
           if (Array.isArray(value) && value.length > 0) {
+            console.log(`🌐 Found visits array in Browser History.${key}`)
             visits = value
             break
           }
         }
       }
+    } else if (typeof data === 'object') {
+      console.log('🌐 Searching object for visit arrays...')
+      // Look for common visit patterns
+      const possibleKeys = ['visits', 'history', 'browsing_history', 'browser_history', 'urls', 'sites', 'pages']
+      for (const key of possibleKeys) {
+        if (data[key] && Array.isArray(data[key])) {
+          console.log(`🌐 Found visits array at key "${key}"`)
+          visits = data[key]
+          break
+        }
+      }
     }
 
-    return visits.filter(visit => visit && visit.url)
+    const filteredVisits = visits.filter(visit => visit && visit.url)
+    console.log('🌐 Filtered visits:', filteredVisits.length, 'visits')
+    return filteredVisits
   }
 
   private categorizeDeviceType(device: DeviceInfo): 'mobile' | 'tablet' | 'laptop' | 'unknown' {
@@ -220,6 +255,53 @@ export class DeviceAnalyzer {
     }
   } {
     console.log('🔍 Analyzing device usage patterns...')
+    console.log('📊 Available devices:', this.devices.length)
+    console.log('📊 Available visits:', this.visits.length)
+    
+    if (this.devices.length === 0) {
+      console.log('❌ No devices to analyze')
+      return {
+        deviceStats: [],
+        deviceComparison: [],
+        crossDevicePatterns: {
+          sharedSites: [],
+          deviceSwitchingPatterns: [],
+          timeBasedUsage: Array.from({ length: 24 }, (_, hour) => ({ hour, mobile: 0, tablet: 0, laptop: 0 }))
+        }
+      }
+    }
+    
+    if (this.visits.length === 0) {
+      console.log('❌ No visits to analyze')
+      // Return basic device info without visit data
+      const deviceStats: DeviceStats[] = this.devices.map(device => ({
+        device_guid: device.cache_guid,
+        deviceName: device.client_name || `${device.manufacturer} ${device.model}`,
+        deviceType: this.categorizeDeviceType(device),
+        manufacturer: device.manufacturer,
+        model: device.model,
+        totalVisits: 0,
+        uniqueUrls: 0,
+        topDomains: [],
+        hourlyActivity: Array.from({ length: 24 }, (_, hour) => ({ hour, visits: 0 })),
+        dailyActivity: [],
+        lastActive: new Date(device.last_updated_timestamp || Date.now()),
+        firstActive: new Date(device.last_updated_timestamp || Date.now()),
+        avgSessionLength: 0,
+        peakUsageHour: 0,
+        mostVisitedSite: 'None'
+      }))
+      
+      return {
+        deviceStats,
+        deviceComparison: [],
+        crossDevicePatterns: {
+          sharedSites: [],
+          deviceSwitchingPatterns: [],
+          timeBasedUsage: Array.from({ length: 24 }, (_, hour) => ({ hour, mobile: 0, tablet: 0, laptop: 0 }))
+        }
+      }
+    }
 
     // Create device stats
     const deviceStats: DeviceStats[] = this.devices.map(device => {

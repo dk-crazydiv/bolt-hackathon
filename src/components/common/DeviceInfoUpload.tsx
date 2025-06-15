@@ -10,10 +10,12 @@ import { cn } from '@/lib/utils'
 
 export const DeviceInfoUpload: React.FC = () => {
   const { parseFile } = useFileParser()
-  const { getPageData, parseProgress } = useDataStore()
+  const { getPageData, parseProgress, clearPageData } = useDataStore()
   const deviceData = getPageData('deviceInfo')
   
   console.log('🔍 DeviceInfoUpload: Device data state:', deviceData)
+  console.log('🔍 DeviceInfoUpload: Has device data:', !!deviceData)
+  console.log('🔍 DeviceInfoUpload: Device data structure:', deviceData?.metadata)
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -95,10 +97,7 @@ export const DeviceInfoUpload: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  // Clear device data
-                  useDataStore.getState().clearPageData('deviceInfo')
-                }}
+                onClick={() => clearPageData('deviceInfo')}
               >
                 Remove
               </Button>

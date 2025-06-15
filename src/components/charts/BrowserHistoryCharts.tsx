@@ -39,6 +39,13 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   const deviceData = getPageData('deviceInfo'); // Get device info data
   const { loadPageDataFromDB } = useDataStore();
   
+  console.log('🔍 BrowserHistoryCharts: Data state check:', {
+    browserData: data ? 'Present' : 'Missing',
+    deviceData: deviceData ? 'Present' : 'Missing',
+    browserDataHasData: data?.data ? 'Yes' : 'No',
+    deviceDataHasData: deviceData?.data ? 'Yes' : 'No'
+  });
+  
   // Load data from IndexedDB if we only have metadata
   React.useEffect(() => {
     const loadFullData = async () => {
@@ -46,10 +53,14 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         console.log('🔄 Loading full data from IndexedDB for browser history...');
         await loadPageDataFromDB('browserHistory');
       }
+      if (deviceData && !deviceData.data && (deviceData as any)._hasDataInIndexedDB) {
+        console.log('🔄 Loading full device data from IndexedDB...');
+        await loadPageDataFromDB('deviceInfo');
+      }
     };
     
     loadFullData();
-  }, [data, loadPageDataFromDB]);
+  }, [data, deviceData, loadPageDataFromDB]);
 
   const analytics = useMemo(() => {
     if (propAnalytics) {
@@ -474,7 +485,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
         <TabsContent value="devices" className="space-y-6">
           <DeviceWiseBrowserCharts 
-            deviceData={deviceData?.data} 
+            deviceData={deviceData?.data || null} 
             browserData={data?.data} 
           />
         </TabsContent>
