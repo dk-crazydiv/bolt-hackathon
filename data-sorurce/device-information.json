@@ -1,0 +1,99 @@
+{
+    "Device Info": [
+        {
+            "sync_user_agent": "Chrome MAC 132.0.6834.160 (cdae089eab830291f81deb011febbbdc520a019e-refs/branch-heads/6834@{#4409}) channel(stable)",
+            "device_type": "TYPE_MAC",
+            "chrome_version_info": {"version_number": "132.0.6834.160"},
+            "signin_scoped_device_id": "c8be180c-89df-4139-ba50-162548f5dd31",
+            "manufacturer": "Apple Inc.",
+            "cache_guid": "aV4HwFwrPuI0D3r1oeeA6g==",
+            "device_form_factor": "DEVICE_FORM_FACTOR_DESKTOP",
+            "pulse_interval_in_minutes": 1440,
+            "feature_fields": {
+                        "send_tab_to_self_receiving_type": "SEND_TAB_RECEIVING_TYPE_CHROME_OR_UNSPECIFIED",
+                        "send_tab_to_self_receiving_enabled": true
+            },
+            "invalidation_fields": {
+                        "instance_id_token": "fn2PtlJT-RU:APA91bFZ6X7dgTOrLFLszZZWCx8sB3ltfGMWVYmDL4yKA2-Kt_8IP8M5E33j-hAimmhqSut1uf26cMihp1LXxbipHJIxNNx_P-NyMvvQPEoJIIkzHWMH8EA",
+                        "interested_data_type_ids": [
+                                    32904,
+                                    37702,
+                                    45873,
+                                    63951,
+                                    31729,
+                                    1164238,
+                                    306270,
+                                    330441,
+                                    774329,
+                                    1033580,
+                                    41210,
+                                    48119,
+                                    88610,
+                                    50119,
+                                    48364,
+                                    103656,
+                                    96159,
+                                    150251,
+                                    154522,
+                                    163425,
+                                    411028,
+                                    601980,
+                                    673225,
+                                    963985,
+                                    1034378,
+                                    1004874,
+                                    895275,
+                                    1141935,
+                                    47745
+                        ]
+            },
+            "os_type": "OS_TYPE_MAC",
+            "last_updated_timestamp": 1749721534892,
+            "model": "Mac16,8",
+            "client_name": "priyamss-MacBook-Pro",
+            "chrome_version": "132.0.6834.160"
+},
+        {
+            "sync_user_agent": "Chrome IOS-PHONE 137.0.7151.51 (9e60d7e78d17346fa6a23e854d3a55c5b0a87517-refs/branch-heads/7151@{#1598}) channel(stable)",
+            "device_type": "TYPE_PHONE",
+            "chrome_version_info": {"version_number": "137.0.7151.51"},
+            "signin_scoped_device_id": "5e43584a-687e-4ae0-a37a-a5d2b4d4825a",
+            "manufacturer": "Apple Inc.",
+            "cache_guid": "86okp3pguD+juFMqvKlvkg==",
+            "device_form_factor": "DEVICE_FORM_FACTOR_PHONE",
+            "pulse_interval_in_minutes": 1440,
+            "feature_fields": {
+                        "send_tab_to_self_receiving_type": "SEND_TAB_RECEIVING_TYPE_CHROME_OR_UNSPECIFIED",
+                        "send_tab_to_self_receiving_enabled": true
+            },
+            "invalidation_fields": {
+                        "instance_id_token": "fsqEY4kIgjs:APA91bFKJvxUFjJ4CWzsxFk9S6ia6ghkCyrutUJAZ6Gq-cRK-Flt1nPakVfqdsOtaKKuACx7hRLo_IvwTIz2MWr6tQdP4Zy73HZx5ILvTdJgE4TU7mzSD48",
+                        "interested_data_type_ids": [
+                                    32904,
+                                    37702,
+                                    45873,
+                                    306270,
+                                    330441,
+                                    774329,
+                                    50119,
+                                    150251,
+                                    154522,
+                                    163425,
+                                    411028,
+                                    601980,
+                                    963985,
+                                    1034378,
+                                    1004874,
+                                    895275,
+                                    1141935,
+                                    47745
+                        ]
+            },
+            "os_type": "OS_TYPE_IOS",
+            "last_updated_timestamp": 1749841437965,
+            "model": "iPhone14,5",
+            "client_name": "iPhone14,5",
+            "chrome_version": "137.0.7151.51"
+}
+    ]
+}
