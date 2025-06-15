@@ -132,11 +132,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <h1 className="text-3xl font-bold mb-2">{title}</h1>
         <p className="text-muted-foreground text-lg mb-4">{description}</p>
         
-      </div>
-
-      {/* Compact file status next to title */}
-      {hasAnyData && (
-        <div className="mb-6">
+        {/* File status in header area */}
+        {hasAnyData && (
           <div className="flex items-center gap-4 flex-wrap">
             {/* Main data file status */}
             {currentData && (
@@ -204,8 +201,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {!hasAnyData ? (
         <div className="space-y-6">
