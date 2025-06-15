@@ -1,8 +1,11 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Moon, Sun, Database, Bug } from 'lucide-react'
+import { Moon, Sun, Database, Bug, HardDrive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { useUIStore } from '@/store/uiStore'
+import { useDataStore } from '@/store/dataStore'
+import { IndexedDBStorage } from '@/utils/indexedDBStorage'
 import { cn } from '@/lib/utils'
 
 interface AppLayoutProps {
@@ -20,7 +23,9 @@ const navigationItems = [
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { darkMode, toggleDarkMode } = useUIStore()
+  const { initializeFromDB } = useDataStore()
   const location = useLocation()
+  const [storageInfo, setStorageInfo] = React.useState({ totalRecords: 0, totalSize: 0 })
 
   React.useEffect(() => {
     if (darkMode) {
@@ -29,6 +34,36 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  // Initialize data from IndexedDB on app start
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await initializeFromDB()
+        const info = await IndexedDBStorage.getStorageInfo()
+        setStorageInfo(info)
+      } catch (error) {
+        console.error('Failed to initialize app from IndexedDB:', error)
+      }
+    }
+
+    initializeApp()
+  }, [initializeFromDB])
+
+  // Update storage info periodically
+  useEffect(() => {
+    const updateStorageInfo = async () => {
+      try {
+        const info = await IndexedDBStorage.getStorageInfo()
+        setStorageInfo(info)
+      } catch (error) {
+        console.error('Failed to update storage info:', error)
+      }
+    }
+
+    const interval = setInterval(updateStorageInfo, 5000) // Update every 5 seconds
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,6 +77,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             </Link>
             
             <div className="flex items-center space-x-4">
+              {/* Storage Info */}
+              {storageInfo.totalRecords > 0 && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <HardDrive className="h-4 w-4" />
+                  <Badge variant="outline">
+                    {storageInfo.totalRecords.toLocaleString()} records
+                  </Badge>
+                  <Badge variant="outline">
+                    {(storageInfo.totalSize / 1024 / 1024).toFixed(1)} MB
+                  </Badge>
+                </div>
+              )}
+              
               <Link
                 to="/debug-json"
                 className={cn(

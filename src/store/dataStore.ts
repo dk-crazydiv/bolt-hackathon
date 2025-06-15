@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ParsedData, ParseProgress } from '../types'
+import { IndexedDBStorage } from '../utils/indexedDBStorage'
 
 interface DataState {
-  // Data storage per page
+  // Data storage per page - now just metadata for localStorage
   googleMapsTimelineData: ParsedData | null
   browserHistoryData: ParsedData | null
   youtubeHistoryData: ParsedData | null
@@ -23,6 +24,10 @@ interface DataState {
   setParseProgress: (progress: ParseProgress | null) => void
   setLoading: (loading: boolean) => void
   clearAllData: () => void
+  
+  // IndexedDB actions
+  loadPageDataFromDB: (page: string) => Promise<void>
+  initializeFromDB: () => Promise<void>
 }
 
 export const useDataStore = create<DataState>()(
@@ -40,29 +45,54 @@ export const useDataStore = create<DataState>()(
       isLoading: false,
 
       // Actions
-      setPageData: (page, data) =>
-        set((state) => {
-          console.log(`Setting data for page ${page}:`, data?.metadata?.totalRecords, 'records')
-          return {
-            [`${page}Data`]: data,
-          }
-        }),
+      setPageData: async (page, data) => {
+        console.log(`Setting data for page ${page}:`, data?.metadata?.totalRecords, 'records')
+        
+        // Store in IndexedDB
+        try {
+          await IndexedDBStorage.setPageData(page, data)
+        } catch (error) {
+          console.error('Failed to store in IndexedDB:', error)
+        }
+        
+        // Update Zustand state
+        set((state) => ({
+          [`${page}Data`]: data,
+        }))
+      },
 
       getPageData: (page) => {
         const state = get()
         return state[`${page}Data` as keyof DataState] as ParsedData | null
       },
 
-      clearPageData: (page) =>
+      clearPageData: async (page) => {
+        // Clear from IndexedDB
+        try {
+          await IndexedDBStorage.clearPageData(page)
+        } catch (error) {
+          console.error('Failed to clear from IndexedDB:', error)
+        }
+        
+        // Clear from Zustand state
         set((state) => ({
           [`${page}Data`]: null,
-        })),
+        }))
+      },
 
       setParseProgress: (progress) => set({ parseProgress: progress }),
 
       setLoading: (loading) => set({ isLoading: loading }),
 
-      clearAllData: () =>
+      clearAllData: async () => {
+        // Clear from IndexedDB
+        try {
+          await IndexedDBStorage.clearAllData()
+        } catch (error) {
+          console.error('Failed to clear all data from IndexedDB:', error)
+        }
+        
+        // Clear from Zustand state
         set({
           googleMapsTimelineData: null,
           browserHistoryData: null,
@@ -73,28 +103,69 @@ export const useDataStore = create<DataState>()(
           debugJsonData: null,
           parseProgress: null,
           isLoading: false,
-        }),
+        })
+      },
+
+      // Load data from IndexedDB for a specific page
+      loadPageDataFromDB: async (page) => {
+        try {
+          const data = await IndexedDBStorage.getPageData(page)
+          if (data) {
+            set((state) => ({
+              [`${page}Data`]: data,
+            }))
+          }
+        } catch (error) {
+          console.error(`Failed to load data for page ${page} from IndexedDB:`, error)
+        }
+      },
+
+      // Initialize all data from IndexedDB on app start
+      initializeFromDB: async () => {
+        const pages = ['googleMapsTimeline', 'browserHistory', 'youtubeHistory', 'playstoreAppsData', 'fitbitData', 'googleMapReviews', 'debugJson']
+        
+        for (const page of pages) {
+          try {
+            const data = await IndexedDBStorage.getPageData(page)
+            if (data) {
+              set((state) => ({
+                [`${page}Data`]: data,
+              }))
+            }
+          } catch (error) {
+            console.error(`Failed to load data for page ${page} from IndexedDB:`, error)
+          }
+        }
+      },
     }),
     {
       name: 'data-explorer-storage',
       partialize: (state) => {
-        // Helper function to exclude the large data array from ParsedData
-        const excludeDataArray = (parsedData: ParsedData | null) => {
+        // Helper function to store only metadata, not the full data
+        const getMetadataOnly = (parsedData: ParsedData | null) => {
           if (!parsedData) return null
           return {
             ...parsedData,
-            data: [] // Store empty array instead of the full data to save space
+            data: null, // Don't store the actual data in localStorage
+            _hasDataInIndexedDB: true // Flag to indicate data is in IndexedDB
           }
         }
 
         return {
-          googleMapsTimelineData: excludeDataArray(state.googleMapsTimelineData),
-          browserHistoryData: excludeDataArray(state.browserHistoryData),
-          youtubeHistoryData: excludeDataArray(state.youtubeHistoryData),
-          playstoreAppsData: excludeDataArray(state.playstoreAppsData),
-          fitbitData: excludeDataArray(state.fitbitData),
-          googleMapReviewsData: excludeDataArray(state.googleMapReviewsData),
-          debugJsonData: excludeDataArray(state.debugJsonData)
+          // Only store metadata in localStorage, actual data goes to IndexedDB
+          googleMapsTimelineData: getMetadataOnly(state.googleMapsTimelineData),
+          browserHistoryData: getMetadataOnly(state.browserHistoryData),
+          youtubeHistoryData: getMetadataOnly(state.youtubeHistoryData),
+          playstoreAppsData: getMetadataOnly(state.playstoreAppsData),
+          fitbitData: getMetadataOnly(state.fitbitData),
+          googleMapReviewsData: getMetadataOnly(state.googleMapReviewsData),
+          debugJsonData: getMetadataOnly(state.debugJsonData)
+        }
+      },
+      onRehydrateStorage: () => (state) => {
+        // After rehydrating from localStorage, load actual data from IndexedDB
+        if (state) {
+          state.initializeFromDB()
         }
       }
     }

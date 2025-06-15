@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Bug, Trash2 } from 'lucide-react'
+import { Bug, Trash2, Database } from 'lucide-react'
 import { DropZone } from '@/components/common/DropZone'
 import { useDataStore } from '@/store/dataStore'
 import { ParsedData } from '@/types'
@@ -27,11 +27,23 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   children
 }) => {
   const navigate = useNavigate()
-  const { getPageData, clearPageData } = useDataStore()
+  const { getPageData, clearPageData, loadPageDataFromDB } = useDataStore()
   const currentData = getPageData(pageId)
 
-  const handleClearData = () => {
-    clearPageData(pageId)
+  // Load data from IndexedDB when component mounts
+  useEffect(() => {
+    const loadData = async () => {
+      // If we have metadata but no actual data, load from IndexedDB
+      if (currentData && !currentData.data && (currentData as any)._hasDataInIndexedDB) {
+        await loadPageDataFromDB(pageId)
+      }
+    }
+    
+    loadData()
+  }, [pageId, loadPageDataFromDB, currentData])
+
+  const handleClearData = async () => {
+    await clearPageData(pageId)
   }
 
   const handleDebugJson = () => {
@@ -70,6 +82,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div className="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-950 rounded-lg">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
+                <Database className="h-4 w-4 text-green-600" />
                 <span className="font-medium text-green-700 dark:text-green-300">
                   {currentData.fileName}
                 </span>
@@ -79,9 +92,15 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                 <Badge variant="secondary">
                   {(currentData.size / 1024 / 1024).toFixed(1)} MB
                 </Badge>
+                {(currentData as any)._hasDataInIndexedDB && (
+                  <Badge variant="outline" className="text-blue-600">
+                    IndexedDB
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-green-600 dark:text-green-400">
                 Data loaded and ready for analysis
+                {(currentData as any)._hasDataInIndexedDB && ' (stored in IndexedDB for optimal performance)'}
               </p>
             </div>
             <div className="flex gap-2">
