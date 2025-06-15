@@ -1,0 +1,89 @@
+[{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Book",
+      "title": "I Am Not Okay With This"
+    },
+    "acquisitionTime": "2020-02-29T20:36:21Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Book",
+      "title": "Infinity Gauntlet"
+    },
+    "acquisitionTime": "2018-06-12T22:01:59Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Subscription",
+      "title": "Premium - Monthly (Guess the picture - Kids Quiz)"
+    },
+    "acquisitionTime": "2022-06-02T11:47:08.585Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Book",
+      "title": "Learning Patterns"
+    },
+    "acquisitionTime": "2022-01-30T20:43:20Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Subscription",
+      "title": "Pro Plus - Monthly (Smile Daily: Mental Health App)"
+    },
+    "acquisitionTime": "2022-05-31T19:37:56.931Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Book",
+      "title": "Sacred Games"
+    },
+    "acquisitionTime": "2018-07-20T23:54:50Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Subscription",
+      "title": "Premium - Monthly (Guess the picture - Kids Quiz)"
+    },
+    "acquisitionTime": "2022-06-14T12:28:50.952Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Movie",
+      "title": "Raanjhanaa"
+    },
+    "acquisitionTime": "2018-12-30T21:34:34.494Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "title": "$0.99 for any movie rental"
+    },
+    "acquisitionTime": "2018-06-21T04:42:27.702Z"
+  }
+},
+{
+  "libraryDoc": {
+    "doc": {
+      "documentType": "Subscription",
+      "title": "Pro Plus - Monthly (Smile Daily: Mental Health App)"
+    },
+    "acquisitionTime": "2022-05-31T20:19:29.729Z"
+  }
+}]

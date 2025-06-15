@@ -1,0 +1,44 @@
+[{
+  "subscription": {
+    "doc": {
+      "documentType": "Subscription",
+      "title": "Premium - Monthly (Guess the picture - Kids Quiz)"
+    },
+    "expirationDate": "2022-06-14T13:03:46.101Z",
+    "pricing": [{
+      "period": {
+        "unit": "MINUTE",
+        "count": 5
+      },
+      "price": "₹50.00",
+      "repeatedPricing": true
+    }],
+    "userChangeRecord": [{
+      "date": "2022-06-14T13:03:48.180Z",
+      "type": "Cancel"
+    }],
+    "state": "Canceled"
+  }
+},
+{
+  "subscription": {
+    "doc": {
+      "documentType": "Subscription",
+      "title": "Premium - Monthly (Guess the picture - Kids Quiz)"
+    },
+    "expirationDate": "2022-06-14T13:03:46.101Z",
+    "pricing": [{
+      "period": {
+        "unit": "MINUTE",
+        "count": 5
+      },
+      "price": "₹50.00",
+      "repeatedPricing": true
+    }],
+    "userChangeRecord": [{
+      "date": "2022-06-14T13:03:48.180Z",
+      "type": "Cancel"
+    }],
+    "state": "Canceled"
+  }
+}]

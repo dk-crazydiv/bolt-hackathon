@@ -1,0 +1,34 @@
+[{
+  "device": {
+    "mostRecentData": {
+      "carrierName": "Reliance Jio",
+      "playStoreClientVersion": 84651920,
+      "manufacturer": "Xiaomi",
+      "modelName": "POCO F1",
+      "deviceName": "beryllium",
+      "productName": "beryllium",
+      "retailBrand": "Xiaomi",
+      "totalMemoryBytes": "5905416192",
+      "nativePlatform": ["arm64-v8a", "armeabi-v7a", "armeabi"],
+      "deviceIpCountry": "IN",
+      "userLocale": "en_IN",
+      "buildFingerprint": "Xiaomi/beryllium/beryllium:10/QKQ1.190828.002/V12.0.3.0.QEJMIXM:user/release-keys",
+      "androidSdkVersion": "29"
+    },
+    "dataAtTimeOfUserPlayActivity": {
+      "carrierName": "Reliance Jio",
+      "manufacturer": "Xiaomi",
+      "modelName": "POCO F1",
+      "deviceName": "beryllium",
+      "productName": "beryllium",
+      "retailBrand": "Xiaomi",
+      "nativePlatform": ["arm64-v8a", "armeabi-v7a", "armeabi"],
+      "deviceIpCountry": "IN",
+      "userLocale": "en_IN",
+      "androidSdkVersion": "29"
+    },
+    "deviceRegistrationTime": "2018-09-21T14:47:25.946Z",
+    "userAddedOnDeviceTime": "2018-09-21T14:47:25.946Z",
+    "lastTimeDeviceActive": "2025-06-08T18:11:47.597079Z"
+  }
+}]
