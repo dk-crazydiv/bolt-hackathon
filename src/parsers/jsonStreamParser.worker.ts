@@ -24,6 +24,11 @@ class JsonStreamParser {
         try {
           // Try parsing as complete JSON first
           const data = JSON.parse(text)
+          console.log('Parsed JSON structure:', Object.keys(data || {}))
+          
+          // Count records properly based on data structure
+          recordsProcessed = this.countRecords(data)
+          console.log('Total records counted:', recordsProcessed)
           
           if (Array.isArray(data)) {
             // Handle array of objects
@@ -31,7 +36,6 @@ class JsonStreamParser {
               if (this.abortController?.signal.aborted) return
               
               currentChunk.push(item)
-              recordsProcessed++
               
               if (currentChunk.length >= chunkSize) {
                 chunks.push([...currentChunk])
@@ -42,18 +46,17 @@ class JsonStreamParser {
                   type: 'progress',
                   payload: {
                     fileName: file.name,
-                    progress: (recordsProcessed / data.length) * 100,
+                    progress: ((index + 1) / data.length) * 100,
                     status: 'parsing',
-                    recordsProcessed,
+                    recordsProcessed: index + 1,
                     totalSize: file.size
                   }
                 })
               }
             })
           } else {
-            // Handle single object
+            // Handle single object or nested structure
             chunks.push([data])
-            recordsProcessed = 1
           }
           
           // Add remaining items
@@ -67,14 +70,15 @@ class JsonStreamParser {
             fileName: file.name,
             size: file.size,
             parsedAt: new Date(),
-            data: Array.isArray(data) ? data : [data],
+            data: Array.isArray(data) ? data : data,
             metadata: {
               totalRecords: recordsProcessed,
-              fileStructure: Object.keys(Array.isArray(data) ? (data[0] || {}) : data),
-              dataTypes: this.inferDataTypes(Array.isArray(data) ? (data[0] || {}) : data)
+              fileStructure: this.getFileStructure(data),
+              dataTypes: this.inferDataTypes(data)
             }
           }
           
+          console.log('Final parsed data metadata:', parsedData.metadata)
           resolve(parsedData)
           
         } catch (error) {
@@ -85,6 +89,76 @@ class JsonStreamParser {
       reader.onerror = () => reject(new Error('Failed to read file'))
       reader.readAsText(file)
     })
+  }
+
+  private countRecords(data: any): number {
+    console.log('Counting records in data:', typeof data, Array.isArray(data))
+    
+    if (Array.isArray(data)) {
+      console.log('Data is array, count:', data.length)
+      return data.length
+    }
+    
+    if (typeof data === 'object' && data !== null) {
+      let totalCount = 0
+      
+      // Special handling for Browser History structure
+      if (data["Browser History"]) {
+        console.log('Found Browser History key')
+        const browserHistory = data["Browser History"]
+        
+        if (Array.isArray(browserHistory)) {
+          console.log('Browser History is array, count:', browserHistory.length)
+          return browserHistory.length
+        }
+        
+        if (typeof browserHistory === 'object') {
+          console.log('Browser History is object, keys:', Object.keys(browserHistory))
+          // Look for arrays within Browser History
+          for (const [key, value] of Object.entries(browserHistory)) {
+            if (Array.isArray(value)) {
+              console.log(`Found array in Browser History.${key}, count:`, value.length)
+              totalCount += value.length
+            }
+          }
+          if (totalCount > 0) {
+            console.log('Total count from Browser History arrays:', totalCount)
+            return totalCount
+          }
+        }
+      }
+      
+      // General approach: count all arrays in the object
+      const countArraysRecursively = (obj: any): number => {
+        let count = 0
+        
+        if (Array.isArray(obj)) {
+          return obj.length
+        }
+        
+        if (typeof obj === 'object' && obj !== null) {
+          for (const [key, value] of Object.entries(obj)) {
+            if (Array.isArray(value)) {
+              console.log(`Found array at ${key}, length:`, value.length)
+              count += value.length
+            } else if (typeof value === 'object' && value !== null) {
+              count += countArraysRecursively(value)
+            }
+          }
+        }
+        
+        return count
+      }
+      
+      totalCount = countArraysRecursively(data)
+      console.log('Total recursive count:', totalCount)
+      
+      // If no arrays found, treat as single record
+      return totalCount > 0 ? totalCount : 1
+    }
+    
+    // Primitive value
+    return 1
   }
 
   private getFileStructure(data: any): string[] {
@@ -116,7 +190,7 @@ class JsonStreamParser {
     return []
   }
 
-  private inferDataTypes(obj: Record<string, any>): Record<string, string> {
+  private inferDataTypes(obj: any): Record<string, string> {
     if (Array.isArray(obj)) {
       return obj.length > 0 ? this.inferDataTypes(obj[0]) : {}
     }
