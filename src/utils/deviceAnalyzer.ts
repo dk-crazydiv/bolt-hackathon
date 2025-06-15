@@ -79,6 +79,10 @@ export class DeviceAnalyzer {
       deviceArray = data
     } else if (data["Device Info"] && Array.isArray(data["Device Info"])) {
       deviceArray = data["Device Info"]
+    } else if (data.deviceInfo && Array.isArray(data.deviceInfo)) {
+      deviceArray = data.deviceInfo
+    } else if (data.devices && Array.isArray(data.devices)) {
+      deviceArray = data.devices
     } else if (data.devices && Array.isArray(data.devices)) {
       deviceArray = data.devices
     } else if (typeof data === 'object') {
@@ -87,11 +91,17 @@ export class DeviceAnalyzer {
         if (Array.isArray(value) && value.length > 0) {
           const sample = value[0]
           if (sample && (sample.cache_guid || sample.device_type || sample.manufacturer)) {
+            console.log(`📱 Found device array at key "${key}":`, value.length, 'devices')
             deviceArray = value
             break
           }
         }
       }
+    }
+
+    console.log('📱 Final device array length:', deviceArray.length)
+    if (deviceArray.length > 0) {
+      console.log('📱 Sample device:', deviceArray[0])
     }
 
     return deviceArray.map(device => ({

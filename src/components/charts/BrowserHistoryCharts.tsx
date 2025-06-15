@@ -36,7 +36,7 @@ interface BrowserHistoryChartsProps {
 export default function BrowserHistoryCharts({ analytics: propAnalytics }: BrowserHistoryChartsProps) {
   const { getPageData } = useDataStore();
   const data = getPageData('browserHistory');
-  const deviceData = getPageData('playstoreAppsData'); // Device info is in Play Store data
+  const deviceData = getPageData('deviceInfo'); // Get device info data
   const { loadPageDataFromDB } = useDataStore();
   
   // Load data from IndexedDB if we only have metadata

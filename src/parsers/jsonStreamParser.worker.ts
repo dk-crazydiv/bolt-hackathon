@@ -110,6 +110,17 @@ class JsonStreamParser {
     }
     
     if (typeof data === 'object' && data !== null) {
+      // Special handling for Device Info structure
+      if (data["Device Info"]) {
+        console.log('📱 Found Device Info key')
+        const deviceInfo = data["Device Info"]
+        
+        if (Array.isArray(deviceInfo)) {
+          console.log('✅ Device Info is array, returning it')
+          return deviceInfo
+        }
+      }
+      
       // Special handling for Browser History structure
       if (data["Browser History"]) {
         console.log('🌐 Found Browser History key')
@@ -136,7 +147,7 @@ class JsonStreamParser {
       const possibleKeys = [
         'visits', 'history', 'browsing_history', 'browser_history',
         'urls', 'sites', 'pages', 'records', 'entries', 'items',
-        'History', 'Visits', 'BrowsingHistory'
+        'History', 'Visits', 'BrowsingHistory', 'Device Info', 'deviceInfo', 'devices'
       ]
       
       for (const key of possibleKeys) {
@@ -247,7 +258,8 @@ class JsonStreamParser {
       // Check for common browser history patterns
       const possibleKeys = [
         'visits', 'history', 'browsing_history', 'browser_history',
-        'urls', 'sites', 'pages', 'records', 'entries', 'items'
+        'urls', 'sites', 'pages', 'records', 'entries', 'items',
+        'Device Info', 'deviceInfo', 'devices'
       ]
       
       for (const key of possibleKeys) {

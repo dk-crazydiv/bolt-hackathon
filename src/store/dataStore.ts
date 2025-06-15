@@ -125,7 +125,7 @@ export const useDataStore = create<DataState>()(
 
       // Initialize all data from IndexedDB on app start
       initializeFromDB: async () => {
-        const pages = ['googleMapsTimeline', 'browserHistory', 'youtubeHistory', 'playstoreAppsData', 'fitbitData', 'googleMapReviews', 'deviceInfo', 'debugJson']
+        const pages = ['googleMapsTimeline', 'browserHistory', 'youtubeHistory', 'playstoreApps', 'fitbitData', 'googleMapReviews', 'deviceInfo', 'debugJson']
         
         for (const page of pages) {
           try {

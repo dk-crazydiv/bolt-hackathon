@@ -73,7 +73,14 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
             <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <CardTitle className="mb-2">No device data available</CardTitle>
             <CardDescription>
-              Upload both device information and browser history data to see device-wise analysis.
+              Upload device information file to see device-wise analysis.
+              {!deviceData && (
+                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded text-yellow-700 dark:text-yellow-300 text-sm">
+                  Device data: {deviceData ? 'Available' : 'Missing'}
+                  <br />
+                  Browser data: {browserData ? 'Available' : 'Missing'}
+                </div>
+              )}
             </CardDescription>
           </div>
         </CardContent>

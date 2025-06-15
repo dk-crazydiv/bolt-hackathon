@@ -12,6 +12,8 @@ export const DeviceInfoUpload: React.FC = () => {
   const { parseFile } = useFileParser()
   const { getPageData, parseProgress } = useDataStore()
   const deviceData = getPageData('deviceInfo')
+  
+  console.log('🔍 DeviceInfoUpload: Device data state:', deviceData)
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
