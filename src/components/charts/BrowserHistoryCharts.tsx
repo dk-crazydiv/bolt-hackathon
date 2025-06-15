@@ -19,6 +19,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   PieChart as RechartsPieChart,
+  Pie,
   Cell,
   LineChart,
   Line,
@@ -449,13 +450,22 @@ export const BrowserHistoryCharts: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
-                  <RechartsPieChart>
-                    <Tooltip formatter={(value, name) => [value, 'Visits']} />
-                    <RechartsPieChart data={analytics.topDomains.slice(0, 8)}>
+                  <RechartsPieChart data={analytics.topDomains.slice(0, 8)}>
+                    <Pie
+                      data={analytics.topDomains.slice(0, 8)}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ domain, percent }) => `${domain} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={120}
+                      fill="#8884d8"
+                      dataKey="visitCount"
+                    >
                       {analytics.topDomains.slice(0, 8).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
-                    </RechartsPieChart>
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [value, 'Visits']} />
                   </RechartsPieChart>
                 </ResponsiveContainer>
               </CardContent>
