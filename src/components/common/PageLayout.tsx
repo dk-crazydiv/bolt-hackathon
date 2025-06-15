@@ -132,28 +132,6 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <h1 className="text-3xl font-bold mb-2">{title}</h1>
         <p className="text-muted-foreground text-lg mb-4">{description}</p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <h3 className="font-semibold mb-2">Accepted Formats</h3>
-            <div className="flex flex-wrap gap-2">
-              {acceptedFormats.map((format) => (
-                <Badge key={format} variant="secondary">
-                  {format}
-                </Badge>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">Examples</h3>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              {examples.map((example, index) => (
-                <li key={index}>• {example}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
         {hasAnyData && (
           <Accordion type="multiple" className="w-full space-y-2">
             {/* Main data file accordion */}
