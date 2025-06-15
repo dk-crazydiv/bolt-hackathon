@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Bug, Trash2, Database, CheckCircle, Smartphone } from 'lucide-react'
+import { Bug, Trash2, Database, CheckCircle, Smartphone, ArrowLeft } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { DropZone } from '@/components/common/DropZone'
 import { useDataStore } from '@/store/dataStore'
@@ -33,7 +32,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const { getPageData, clearPageData, loadPageDataFromDB } = useDataStore()
   const currentData = getPageData(pageId)
   const deviceData = getPageData('deviceInfo') // Get device info data for browser history page
-  const [activeTab, setActiveTab] = React.useState('charts')
+  const [showUpload, setShowUpload] = React.useState(false)
 
   // Load data from IndexedDB when component mounts
   useEffect(() => {
@@ -132,7 +131,20 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       <div>
         {/* Title row with file status */}
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold">{title}</h1>
+          <div className="flex items-center gap-4">
+            {showUpload && hasAnyData && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowUpload(false)}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Charts
+              </Button>
+            )}
+            <h1 className="text-3xl font-bold">{title}</h1>
+          </div>
           
           {/* File status in same row as title */}
           {hasAnyData && (
@@ -141,7 +153,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               {currentData && (
                 <div 
                   className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
-                  onClick={() => setActiveTab('upload')}
+                  onClick={() => setShowUpload(true)}
                   title="Click to upload new data"
                 >
                   <CheckCircle className="h-4 w-4 text-green-600" />
@@ -155,7 +167,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDebugJson(currentData)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDebugJson(currentData)
+                      }}
                       className="h-6 px-2 text-xs"
                     >
                       <Bug className="h-3 w-3" />
@@ -163,7 +178,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleClearData(pageId)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleClearData(pageId)
+                      }}
                       className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -176,7 +194,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               {pageId === 'browserHistory' && deviceData && (
                 <div 
                   className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
-                  onClick={() => setActiveTab('upload')}
+                  onClick={() => setShowUpload(true)}
                   title="Click to upload new device data"
                 >
                   <Smartphone className="h-4 w-4 text-blue-600" />
@@ -190,7 +208,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDebugJson(deviceData)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDebugJson(deviceData)
+                      }}
                       className="h-6 px-2 text-xs"
                     >
                       <Bug className="h-3 w-3" />
@@ -198,7 +219,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleClearData('deviceInfo')}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleClearData('deviceInfo')
+                      }}
                       className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -213,53 +237,55 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <p className="text-muted-foreground text-lg mb-4">{description}</p>
       </div>
 
-      {!hasAnyData ? (
+      {!hasAnyData || showUpload ? (
         <div className="space-y-6">
-          {/* Show formats and examples prominently when no data */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  Accepted File Formats
-                </CardTitle>
-                <CardDescription>
-                  Upload files in any of these supported formats
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {acceptedFormats.map((format) => (
-                    <Badge key={format} variant="secondary" className="text-sm">
-                      {format}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  Data Examples
-                </CardTitle>
-                <CardDescription>
-                  Examples of data sources that work with this analyzer
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {examples.map((example, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm">
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
-                      <span>{example}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Show formats and examples when no data or in upload mode */}
+          {!hasAnyData && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5 text-primary" />
+                    Accepted File Formats
+                  </CardTitle>
+                  <CardDescription>
+                    Upload files in any of these supported formats
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {acceptedFormats.map((format) => (
+                      <Badge key={format} variant="secondary" className="text-sm">
+                        {format}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    Data Examples
+                  </CardTitle>
+                  <CardDescription>
+                    Examples of data sources that work with this analyzer
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {examples.map((example, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm">
+                        <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                        <span>{example}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           
           <DropZone 
             pageId={pageId}
@@ -269,27 +295,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           {additionalUpload}
         </div>
       ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="charts">Charts & Analysis</TabsTrigger>
-            <TabsTrigger value="upload">Upload New Data</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="charts" className="mt-6">
-            {children}
-          </TabsContent>
-          
-          <TabsContent value="upload" className="mt-6">
-            <div className="space-y-6">
-              <DropZone 
-                pageId={pageId}
-                customTitle={pageId === 'browserHistory' ? 'Upload New Browser History Data' : undefined}
-                customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
-              />
-              {additionalUpload}
-            </div>
-          </TabsContent>
-        </Tabs>
+        // Show charts when data exists and not in upload mode
+        children
       )}
     </div>
   )
