@@ -74,12 +74,19 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
     }
     
     console.log('🔍 DeviceWiseBrowserCharts: Processing data...')
-    console.log('Device data:', deviceData)
-    console.log('Browser data:', browserData)
+    console.log('Device data sample:', Array.isArray(deviceData) ? deviceData[0] : deviceData)
+    console.log('Browser data sample:', Array.isArray(browserData) ? browserData[0] : browserData)
     
     const analyzer = new DeviceAnalyzer(deviceData, browserData)
     const result = analyzer.analyzeDeviceUsage()
     console.log('✅ Device analysis result:', result)
+    console.log('📱 Device stats summary:', result.deviceStats.map(d => ({
+      name: d.deviceName,
+      type: d.deviceType,
+      manufacturer: d.manufacturer,
+      model: d.model,
+      visits: d.totalVisits
+    })))
     return result
   }, [deviceData, browserData])
 

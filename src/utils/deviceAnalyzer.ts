@@ -113,7 +113,8 @@ export class DeviceAnalyzer {
       console.log('📱 Sample device:', deviceArray[0])
     }
 
-    const parsedDevices = deviceArray.map(device => ({
+    const parsedDevices = deviceArray.map((device, index) => {
+      const parsed = {
       cache_guid: device.cache_guid || device.cacheGuid || '',
       device_type: device.device_type || device.deviceType || 'unknown',
       device_form_factor: device.device_form_factor || device.deviceFormFactor || 'unknown',
@@ -123,12 +124,21 @@ export class DeviceAnalyzer {
       chrome_version: device.chrome_version || device.chromeVersion || 'Unknown',
       os_type: device.os_type || device.osType || 'unknown',
       last_updated_timestamp: device.last_updated_timestamp || device.lastUpdatedTimestamp || 0
-    }))
+      }
+      
+      console.log(`📱 Parsed device ${index + 1}:`, {
+        manufacturer: parsed.manufacturer,
+        model: parsed.model,
+        device_type: parsed.device_type,
+        device_form_factor: parsed.device_form_factor,
+        os_type: parsed.os_type,
+        client_name: parsed.client_name
+      })
+      
+      return parsed
+    })
     
     console.log('📱 Parsed devices:', parsedDevices.length, 'devices')
-    if (parsedDevices.length > 0) {
-      console.log('📱 First parsed device:', parsedDevices[0])
-    }
     
     return parsedDevices
   }
@@ -178,40 +188,92 @@ export class DeviceAnalyzer {
   }
 
   private categorizeDeviceType(device: DeviceInfo): 'mobile' | 'tablet' | 'laptop' | 'unknown' {
-    const formFactor = device.device_form_factor.toLowerCase()
-    const deviceType = device.device_type.toLowerCase()
-    const osType = device.os_type.toLowerCase()
+    const formFactor = (device.device_form_factor || '').toLowerCase()
+    const deviceType = (device.device_type || '').toLowerCase()
+    const osType = (device.os_type || '').toLowerCase()
+    const manufacturer = (device.manufacturer || '').toLowerCase()
+    const model = (device.model || '').toLowerCase()
+    const clientName = (device.client_name || '').toLowerCase()
 
-    // Check form factor first
-    if (formFactor.includes('phone') || formFactor.includes('mobile')) {
+    console.log('🔍 Categorizing device:', {
+      formFactor,
+      deviceType,
+      osType,
+      manufacturer,
+      model,
+      clientName
+    })
+
+    // Check form factor first (most reliable)
+    if (formFactor.includes('phone') || formFactor.includes('mobile') || formFactor === 'device_form_factor_phone') {
       return 'mobile'
     }
-    if (formFactor.includes('tablet')) {
+    if (formFactor.includes('tablet') || formFactor === 'device_form_factor_tablet') {
       return 'tablet'
     }
-    if (formFactor.includes('desktop') || formFactor.includes('laptop')) {
+    if (formFactor.includes('desktop') || formFactor.includes('laptop') || formFactor === 'device_form_factor_desktop') {
       return 'laptop'
     }
 
-    // Check device type
-    if (deviceType.includes('phone') || deviceType.includes('mobile')) {
+    // Check device type (second priority)
+    if (deviceType.includes('phone') || deviceType.includes('mobile') || deviceType === 'type_phone') {
       return 'mobile'
     }
-    if (deviceType.includes('tablet')) {
+    if (deviceType.includes('tablet') || deviceType === 'type_tablet') {
       return 'tablet'
     }
-    if (deviceType.includes('mac') || deviceType.includes('windows') || deviceType.includes('linux')) {
+    if (deviceType.includes('mac') || deviceType.includes('windows') || deviceType.includes('linux') || deviceType === 'type_mac') {
       return 'laptop'
     }
 
-    // Check OS type
-    if (osType.includes('ios') || osType.includes('android')) {
-      return osType.includes('tablet') ? 'tablet' : 'mobile'
+    // Check OS type (third priority)
+    if (osType.includes('ios') || osType === 'os_type_ios') {
+      // iOS devices - check model to distinguish iPhone vs iPad
+      if (model.includes('ipad') || clientName.includes('ipad')) {
+        return 'tablet'
+      }
+      if (model.includes('iphone') || clientName.includes('iphone')) {
+        return 'mobile'
+      }
+      // Default iOS to mobile if unclear
+      return 'mobile'
     }
-    if (osType.includes('mac') || osType.includes('windows') || osType.includes('linux')) {
+    if (osType.includes('android') || osType === 'os_type_android') {
+      // Android devices - check model/manufacturer for tablets
+      if (model.includes('tablet') || clientName.includes('tablet') || 
+          manufacturer.includes('tablet') || formFactor.includes('tablet')) {
+        return 'tablet'
+      }
+      return 'mobile'
+    }
+    if (osType.includes('mac') || osType.includes('windows') || osType.includes('linux') || 
+        osType === 'os_type_mac' || osType === 'os_type_windows' || osType === 'os_type_linux') {
       return 'laptop'
     }
 
+    // Check manufacturer and model patterns
+    if (manufacturer.includes('apple')) {
+      if (model.includes('iphone') || clientName.includes('iphone')) {
+        return 'mobile'
+      }
+      if (model.includes('ipad') || clientName.includes('ipad')) {
+        return 'tablet'
+      }
+      if (model.includes('mac') || clientName.includes('mac')) {
+        return 'laptop'
+      }
+    }
+    
+    if (manufacturer.includes('samsung') || manufacturer.includes('google') || 
+        manufacturer.includes('xiaomi') || manufacturer.includes('huawei')) {
+      // Android manufacturers - default to mobile unless tablet indicators
+      if (model.includes('tablet') || model.includes('tab ') || clientName.includes('tablet')) {
+        return 'tablet'
+      }
+      return 'mobile'
+    }
+
+    console.log('⚠️ Could not categorize device, defaulting to unknown:', device)
     return 'unknown'
   }
 
@@ -307,6 +369,8 @@ export class DeviceAnalyzer {
     const deviceStats: DeviceStats[] = this.devices.map(device => {
       const deviceType = this.categorizeDeviceType(device)
       
+      console.log(`📱 Device "${device.client_name}" categorized as: ${deviceType}`)
+      
       // For now, we'll simulate device-specific visits since we don't have cache_guid in browser history
       // In a real implementation, you'd match visits by cache_guid or device identifier
       const deviceVisits = this.visits.filter((_, index) => {
@@ -315,6 +379,7 @@ export class DeviceAnalyzer {
         return index % this.devices.length === deviceIndex
       })
 
+      console.log(`📱 Device "${device.client_name}" assigned ${deviceVisits.length} visits`)
       const domains = new Map<string, number>()
       const hourlyActivity = new Array(24).fill(0)
       const dailyActivity = new Map<string, number>()
