@@ -76,10 +76,15 @@ export const BrowserHistoryCharts: React.FC = () => {
     if (!data) return null
     
     try {
+      console.log('Raw data structure:', data)
+      console.log('Data.data structure:', data.data)
       const analyzer = new BrowserHistoryAnalyzer(data.data)
-      return analyzer.analyze()
+      const result = analyzer.analyze()
+      console.log('Analytics result:', result)
+      return result
     } catch (error) {
       console.error('Error analyzing browser history:', error)
+      console.error('Error details:', error)
       return null
     }
   }, [data])
@@ -449,6 +454,11 @@ export const BrowserHistoryCharts: React.FC = () => {
                 <CardDescription>Visit distribution across top domains</CardDescription>
               </CardHeader>
               <CardContent>
+                {analytics.topDomains.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No domain data available</p>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height={400}>
                   <RechartsPieChart data={analytics.topDomains.slice(0, 8)}>
                     <Pie
@@ -468,6 +478,7 @@ export const BrowserHistoryCharts: React.FC = () => {
                     <Tooltip formatter={(value, name) => [value, 'Visits']} />
                   </RechartsPieChart>
                 </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
 
@@ -477,6 +488,14 @@ export const BrowserHistoryCharts: React.FC = () => {
                 <CardDescription>Detailed statistics for most visited domains</CardDescription>
               </CardHeader>
               <CardContent>
+                {analytics.topDomains.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No domain data to display</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Make sure your data contains valid URLs with domains
+                    </p>
+                  </div>
+                ) : (
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {analytics.topDomains.slice(0, 10).map((domain, index) => (
                     <div key={domain.domain} className="flex items-center justify-between p-3 border rounded-lg">
@@ -501,6 +520,7 @@ export const BrowserHistoryCharts: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -71,13 +71,20 @@ export class BrowserHistoryAnalyzer {
       visits = data.Browser.History
     } else if (data.History && Array.isArray(data.History)) {
       visits = data.History
+    } else if (data.Browser_History && Array.isArray(data.Browser_History)) {
+      visits = data.Browser_History
+    } else if (data.chrome_visits && Array.isArray(data.chrome_visits)) {
+      visits = data.chrome_visits
     } else {
       // Try to find visits in nested structure
       const findVisits = (obj: any): any[] => {
         if (Array.isArray(obj)) return obj
         if (typeof obj === 'object' && obj !== null) {
           for (const [key, value] of Object.entries(obj)) {
-            if (key.toLowerCase().includes('history') || key.toLowerCase().includes('visit')) {
+            if (key.toLowerCase().includes('history') || 
+                key.toLowerCase().includes('visit') || 
+                key.toLowerCase().includes('chrome') ||
+                key.toLowerCase().includes('browser')) {
               const result = findVisits(value)
               if (result.length > 0) return result
             }
@@ -95,20 +102,26 @@ export class BrowserHistoryAnalyzer {
 
     return visits.map(visit => {
       // Handle Chrome's specific timestamp format
-      const visitTime = visit.last_visit_time || visit.visit_time || visit.visitTime || visit.timestamp || Date.now()
+      const visitTime = visit.last_visit_time || 
+                       visit.visit_time || 
+                       visit.visitTime || 
+                       visit.timestamp || 
+                       visit.time ||
+                       visit.date ||
+                       Date.now()
       
       return {
-        url: visit.url || visit.URL || '',
-        title: visit.title || visit.Title || visit.url || '',
+        url: visit.url || visit.URL || visit.uri || '',
+        title: visit.title || visit.Title || visit.name || visit.url || '',
         visitTime: visitTime,
         visitDuration: visit.visitDuration || visit.duration || 0,
-        visitCount: visit.visit_count || visit.visitCount || 1,
-        typedCount: visit.typed_count || visit.typedCount || 0,
+        visitCount: visit.visit_count || visit.visitCount || visit.count || 1,
+        typedCount: visit.typed_count || visit.typedCount || visit.typed || 0,
         timestamp: this.parseTimestamp(visitTime),
         id: visit.id,
         hidden: visit.hidden
       }
-    }).filter(visit => visit.url && visit.url.startsWith('http'))
+    }).filter(visit => visit.url && (visit.url.startsWith('http') || visit.url.startsWith('www')))
   }
 
   private parseTimestamp(time: any): number {
@@ -140,9 +153,21 @@ export class BrowserHistoryAnalyzer {
 
   private extractDomain(url: string): string {
     try {
+      // Handle URLs without protocol
+      if (!url.startsWith('http') && !url.startsWith('//')) {
+        if (url.startsWith('www.')) {
+          url = 'https://' + url
+        } else if (url.includes('.')) {
+          url = 'https://' + url
+        } else {
+          return 'unknown'
+        }
+      }
+      
       const urlObj = new URL(url)
       return urlObj.hostname.replace(/^www\./, '')
     } catch {
+      console.log('Failed to parse URL:', url)
       return 'unknown'
     }
   }
@@ -193,11 +218,18 @@ export class BrowserHistoryAnalyzer {
   }
 
   analyze(): BrowserAnalytics {
+    console.log('Analyzing visits:', this.visits.length, 'visits')
+    
     // Analyze top domains
     const domainMap = new Map<string, DomainStats>()
     
     this.visits.forEach(visit => {
       const domain = this.extractDomain(visit.url)
+      if (domain === 'unknown') {
+        console.log('Unknown domain for URL:', visit.url)
+        return
+      }
+      
       const existing = domainMap.get(domain) || {
         domain,
         visitCount: 0,
@@ -221,6 +253,8 @@ export class BrowserHistoryAnalyzer {
     const topDomains = Array.from(domainMap.values())
       .sort((a, b) => b.visitCount - a.visitCount)
       .slice(0, 20)
+    
+    console.log('Top domains found:', topDomains.length, topDomains.slice(0, 5))
 
     // Analyze top sites
     const siteMap = new Map<string, { url: string; title: string; visitCount: number; domain: string; typedCount: number }>()
