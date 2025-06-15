@@ -87,14 +87,47 @@ class JsonStreamParser {
     })
   }
 
+  private getFileStructure(data: any): string[] {
+    if (Array.isArray(data)) {
+      return data.length > 0 ? Object.keys(data[0] || {}) : []
+    } else if (typeof data === 'object' && data !== null) {
+      const structure: string[] = []
+      const traverse = (obj: any, path: string = '') => {
+        if (Array.isArray(obj)) {
+          structure.push(`${path}[${obj.length}]`)
+          if (obj.length > 0 && typeof obj[0] === 'object') {
+            Object.keys(obj[0]).forEach(key => {
+              structure.push(`${path}[].${key}`)
+            })
+          }
+        } else if (typeof obj === 'object' && obj !== null) {
+          Object.keys(obj).forEach(key => {
+            const newPath = path ? `${path}.${key}` : key
+            structure.push(newPath)
+            if (typeof obj[key] === 'object') {
+              traverse(obj[key], newPath)
+            }
+          })
+        }
+      }
+      traverse(data)
+      return structure
+    }
+    return []
+  }
+
   private inferDataTypes(obj: Record<string, any>): Record<string, string> {
+    if (Array.isArray(obj)) {
+      return obj.length > 0 ? this.inferDataTypes(obj[0]) : {}
+    }
+    
     const types: Record<string, string> = {}
     
-    for (const [key, value] of Object.entries(obj)) {
+    for (const [key, value] of Object.entries(obj || {})) {
       if (value === null) {
         types[key] = 'null'
       } else if (Array.isArray(value)) {
-        types[key] = 'array'
+        types[key] = `array[${value.length}]`
       } else if (typeof value === 'object') {
         types[key] = 'object'
       } else {
