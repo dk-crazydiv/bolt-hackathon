@@ -1,14 +1,13 @@
 import { useCallback, useRef } from 'react'
 import * as Comlink from 'comlink'
 import { useDataStore } from '../store/dataStore'
-import { db } from '../utils/database'
 import { ParsedData } from '../types'
 
 export const useFileParser = () => {
-  const { setParseProgress, addParsedFile, setLoading } = useDataStore()
+  const { setParseProgress, setPageData, setLoading } = useDataStore()
   const workerRef = useRef<any>(null)
 
-  const parseFile = useCallback(async (file: File) => {
+  const parseFile = useCallback(async (file: File, pageId: string) => {
     setLoading(true)
     setParseProgress({
       fileName: file.name,
@@ -48,11 +47,8 @@ export const useFileParser = () => {
 
       const parsedData: ParsedData = await parser.parseFile({ file })
       
-      // Save to IndexedDB
-      await db.parsedFiles.add(parsedData)
-      
-      // Update store
-      addParsedFile(parsedData)
+      // Update store for specific page
+      setPageData(pageId, parsedData)
       
       setParseProgress({
         fileName: file.name,
@@ -82,7 +78,7 @@ export const useFileParser = () => {
     } finally {
       setLoading(false)
     }
-  }, [setParseProgress, addParsedFile, setLoading])
+  }, [setParseProgress, setPageData, setLoading])
 
   const cancelParsing = useCallback(() => {
     if (workerRef.current) {

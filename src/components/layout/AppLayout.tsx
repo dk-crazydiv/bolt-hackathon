@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Moon, Sun, Database, Upload, FileJson, BarChart3 } from 'lucide-react'
+import { Moon, Sun, Database, Bug } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUIStore } from '@/store/uiStore'
 import { cn } from '@/lib/utils'
@@ -9,11 +9,13 @@ interface AppLayoutProps {
   children: React.ReactNode
 }
 
-const dataTypes = [
-  { id: 'google-takeout', name: 'Google Takeout', icon: Database },
-  { id: 'generic-json', name: 'Generic JSON', icon: FileJson },
-  { id: 'social-media', name: 'Social Media', icon: Upload },
-  { id: 'analytics', name: 'Analytics', icon: BarChart3 },
+const navigationItems = [
+  { id: 'google-maps-timeline', name: 'Google Maps Timeline', path: '/google-maps-timeline' },
+  { id: 'browser-history', name: 'Browser History', path: '/browser-history' },
+  { id: 'youtube-history', name: 'Youtube History', path: '/youtube-history' },
+  { id: 'playstore-apps', name: 'Playstore App installs', path: '/playstore-apps' },
+  { id: 'fitbit-data', name: 'Fitbit data', path: '/fitbit-data' },
+  { id: 'google-map-reviews', name: 'Google map reviews', path: '/google-map-reviews' },
 ]
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
@@ -40,6 +42,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             </Link>
             
             <div className="flex items-center space-x-4">
+              <Link
+                to="/debug-json"
+                className={cn(
+                  "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  location.pathname === '/debug-json'
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Bug className="h-4 w-4" />
+                <span>Debug JSON</span>
+              </Link>
+              
               <Button
                 variant="ghost"
                 size="icon"
@@ -57,56 +72,37 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <aside className="w-64 border-r bg-card min-h-[calc(100vh-73px)]">
-          <nav className="p-4 space-y-2">
-            <Link
-              to="/"
-              className={cn(
-                "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                location.pathname === '/' 
-                  ? "bg-primary text-primary-foreground" 
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <Upload className="h-4 w-4" />
-              <span>Upload Data</span>
-            </Link>
-            
-            <div className="pt-4">
-              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Data Types
-              </h3>
-              {dataTypes.map((dataType) => {
-                const Icon = dataType.icon
-                const isActive = location.pathname === `/data/${dataType.id}`
-                
-                return (
-                  <Link
-                    key={dataType.id}
-                    to={`/data/${dataType.id}`}
-                    className={cn(
-                      "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive 
-                        ? "bg-primary text-primary-foreground" 
-                        : "hover:bg-accent hover:text-accent-foreground"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{dataType.name}</span>
-                  </Link>
-                )
-              })}
-            </div>
-          </nav>
-        </aside>
+      {/* Top Navigation */}
+      <nav className="border-b bg-card">
+        <div className="container mx-auto px-4">
+          <div className="flex space-x-8 overflow-x-auto">
+            {navigationItems.map((item) => {
+              const isActive = location.pathname === item.path || 
+                (item.path === '/google-maps-timeline' && location.pathname === '/')
+              
+              return (
+                <Link
+                  key={item.id}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center px-3 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                    isActive
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                  )}
+                >
+                  {item.name}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </nav>
 
-        {/* Main Content */}
-        <main className="flex-1 min-h-[calc(100vh-73px)]">
-          {children}
-        </main>
-      </div>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6">
+        {children}
+      </main>
     </div>
   )
 }

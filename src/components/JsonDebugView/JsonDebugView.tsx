@@ -10,6 +10,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useDataStore } from '@/store/dataStore'
 import { cn } from '@/lib/utils'
 
+interface JsonDebugViewProps {
+  data?: any
+}
+
 interface JsonKeyViewProps {
   data: any
   path?: string
@@ -165,9 +169,11 @@ const JsonValueView: React.FC<JsonValueViewProps> = ({ data, searchTerm }) => {
   )
 }
 
-export const JsonDebugView: React.FC = () => {
-  const { currentFile } = useDataStore()
+export const JsonDebugView: React.FC<JsonDebugViewProps> = ({ data: propData }) => {
+  const { debugJsonData } = useDataStore()
   const [searchTerm, setSearchTerm] = useState('')
+  
+  const currentFile = propData || debugJsonData
 
   const flattenedData = useMemo(() => {
     if (!currentFile) return []
