@@ -118,3 +118,5 @@ export default function DeviceWiseBrowserCharts() {
     </div>
   )
 }
+
+export { DeviceWiseBrowserCharts }
