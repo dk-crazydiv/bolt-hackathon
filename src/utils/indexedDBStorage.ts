@@ -48,12 +48,16 @@ export class IndexedDBStorage {
 
   static async getPageData(pageId: string): Promise<ParsedData | null> {
     try {
-      const stored = await db.storedData
+      const storedArray = await db.storedData
         .where('pageId')
         .equals(pageId)
-        .orderBy('updatedAt')
-        .last()
+        .toArray()
 
+      // Sort by updatedAt in descending order and get the most recent
+      const stored = storedArray
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+        .at(0)
+        
       if (stored) {
         console.log(`✅ Retrieved data for page ${pageId} from IndexedDB`)
         return stored.data
