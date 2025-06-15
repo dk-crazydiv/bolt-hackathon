@@ -702,4 +702,16 @@ export const DeviceWiseBrowserCharts: React.FC<DeviceWiseBrowserChartsProps> = (
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">{device.totalVisits.toLocaleString()}</p>
-                        <p className="
+                        <p className="text-xs text-muted-foreground">visits</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
