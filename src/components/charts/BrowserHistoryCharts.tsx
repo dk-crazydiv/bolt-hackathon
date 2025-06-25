@@ -1121,6 +1121,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                       <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
                     </div>
                   </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
