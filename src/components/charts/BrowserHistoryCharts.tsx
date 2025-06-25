@@ -5,8 +5,8 @@ import { DeviceWiseBrowserCharts } from './DeviceWiseBrowserCharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Globe, Clock, TrendingUp, BarChart3, Activity, Calendar } from 'lucide-react';
 import {
   AreaChart,
@@ -103,11 +103,28 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     return records.slice(0, 1000); // Limit to first 1000 records for performance
   }, [data]);
 
-  const [visibleRecords, setVisibleRecords] = React.useState(50);
+  // Pagination state
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [recordsPerPage, setRecordsPerPage] = React.useState(25);
   
-  const loadMoreRecords = () => {
-    setVisibleRecords(prev => Math.min(prev + 50, rawRecords.length));
+  // Calculate pagination
+  const totalPages = Math.ceil(rawRecords.length / recordsPerPage);
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const endIndex = startIndex + recordsPerPage;
+  const currentRecords = rawRecords.slice(startIndex, endIndex);
+  
+  // Reset to first page when records per page changes
+  const handleRecordsPerPageChange = (value: string) => {
+    setRecordsPerPage(parseInt(value));
+    setCurrentPage(1);
   };
+  
+  // Navigation functions
+  const goToFirstPage = () => setCurrentPage(1);
+  const goToPreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const goToLastPage = () => setCurrentPage(totalPages);
+
   const analytics = useMemo(() => {
     if (propAnalytics) {
       return propAnalytics;
@@ -344,80 +361,161 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         <TabsContent value="data-table" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>📋 Raw Browser History Data</CardTitle>
-              <CardDescription>
-                View all your browser history records in a simple table format. Showing {visibleRecords} of {rawRecords.length} records.
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>📋 Browser History Data Table</CardTitle>
+                  <CardDescription>
+                    View all your browser history records in a simple table format. 
+                    Total records: {rawRecords.length.toLocaleString()}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Records per page:</span>
+                  <Select value={recordsPerPage.toString()} onValueChange={handleRecordsPerPageChange}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {rawRecords.length > 0 ? (
                 <div className="space-y-4">
-                  <ScrollArea className="h-[600px] w-full">
-                    <div className="space-y-2">
-                      {rawRecords.slice(0, visibleRecords).map((record, index) => (
-                        <div key={index} className="border rounded-lg p-4 bg-muted/30">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div>
-                                <span className="text-xs font-medium text-muted-foreground">URL:</span>
-                                <p className="text-sm font-mono break-all">
-                                  {record.url || record.URL || record.uri || 'N/A'}
-                                </p>
-                              </div>
-                              <div>
-                                <span className="text-xs font-medium text-muted-foreground">Title:</span>
-                                <p className="text-sm">
-                                  {record.title || record.Title || record.page_title || 'No title'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <div>
-                                <span className="text-xs font-medium text-muted-foreground">Visit Time:</span>
-                                <p className="text-sm">
-                                  {record.time_usec || record.last_visit_time || record.visit_time || record.visitTime || record.timestamp || 'N/A'}
-                                </p>
-                              </div>
-                              <div className="flex gap-4">
-                                {(record.visit_count || record.visitCount) && (
-                                  <div>
-                                    <span className="text-xs font-medium text-muted-foreground">Visits:</span>
-                                    <p className="text-sm">{record.visit_count || record.visitCount}</p>
+                  {/* Table */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th className="text-left p-3 font-medium text-sm">#</th>
+                            <th className="text-left p-3 font-medium text-sm">URL</th>
+                            <th className="text-left p-3 font-medium text-sm">Title</th>
+                            <th className="text-left p-3 font-medium text-sm">Visit Time</th>
+                            <th className="text-left p-3 font-medium text-sm">Visits</th>
+                            <th className="text-left p-3 font-medium text-sm">Typed</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentRecords.map((record, index) => {
+                            const globalIndex = startIndex + index + 1;
+                            const url = record.url || record.URL || record.uri || 'N/A';
+                            const title = record.title || record.Title || record.page_title || 'No title';
+                            const visitTime = record.time_usec || record.last_visit_time || record.visit_time || record.visitTime || record.timestamp;
+                            const visitCount = record.visit_count || record.visitCount || 1;
+                            const typedCount = record.typed_count || record.typedCount || 0;
+                            
+                            // Format timestamp if it's a Chrome timestamp
+                            let formattedTime = 'N/A';
+                            if (visitTime) {
+                              try {
+                                let timestamp = visitTime;
+                                if (typeof timestamp === 'number' && timestamp > 10000000000000) {
+                                  // Chrome timestamp conversion
+                                  const CHROME_EPOCH_OFFSET = 11644473600000000;
+                                  timestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                }
+                                formattedTime = new Date(timestamp).toLocaleString();
+                              } catch (e) {
+                                formattedTime = visitTime.toString();
+                              }
+                            }
+                            
+                            return (
+                              <tr key={index} className="border-t hover:bg-muted/30">
+                                <td className="p-3 text-sm text-muted-foreground">{globalIndex}</td>
+                                <td className="p-3 text-sm">
+                                  <div className="max-w-xs truncate font-mono" title={url}>
+                                    {url}
                                   </div>
-                                )}
-                                {(record.typed_count || record.typedCount) && (
-                                  <div>
-                                    <span className="text-xs font-medium text-muted-foreground">Typed:</span>
-                                    <p className="text-sm">{record.typed_count || record.typedCount}</p>
+                                </td>
+                                <td className="p-3 text-sm">
+                                  <div className="max-w-xs truncate" title={title}>
+                                    {title}
                                   </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Show additional fields if they exist */}
-                          <div className="mt-3 pt-3 border-t">
-                            <details className="text-xs">
-                              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                                Show all fields ({Object.keys(record).length} fields)
-                              </summary>
-                              <div className="mt-2 p-2 bg-muted rounded text-xs font-mono">
-                                <pre className="whitespace-pre-wrap break-all">
-                                  {JSON.stringify(record, null, 2)}
-                                </pre>
-                              </div>
-                            </details>
-                          </div>
-                        </div>
-                      ))}
+                                </td>
+                                <td className="p-3 text-sm text-muted-foreground">
+                                  <div className="max-w-xs truncate" title={formattedTime}>
+                                    {formattedTime}
+                                  </div>
+                                </td>
+                                <td className="p-3 text-sm text-center">
+                                  <Badge variant="outline" className="text-xs">
+                                    {visitCount}
+                                  </Badge>
+                                </td>
+                                <td className="p-3 text-sm text-center">
+                                  {typedCount > 0 ? (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {typedCount}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                  </ScrollArea>
+                  </div>
                   
-                  {visibleRecords < rawRecords.length && (
-                    <div className="text-center">
-                      <Button onClick={loadMoreRecords} variant="outline">
-                        Load More Records ({rawRecords.length - visibleRecords} remaining)
-                      </Button>
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {startIndex + 1} to {Math.min(endIndex, rawRecords.length)} of {rawRecords.length.toLocaleString()} records
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={goToFirstPage}
+                          disabled={currentPage === 1}
+                        >
+                          First
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={goToPreviousPage}
+                          disabled={currentPage === 1}
+                        >
+                          Previous
+                        </Button>
+                        
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm text-muted-foreground">Page</span>
+                          <Badge variant="outline" className="px-2 py-1">
+                            {currentPage} of {totalPages}
+                          </Badge>
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={goToNextPage}
+                          disabled={currentPage === totalPages}
+                        >
+                          Next
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={goToLastPage}
+                          disabled={currentPage === totalPages}
+                        >
+                          Last
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
