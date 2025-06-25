@@ -1199,26 +1199,6 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                     <li>• Most typed site: {analytics.totalStats.mostTypedSite}</li>
                     <li>• Unique sites visited: {analytics.totalStats.totalSites}</li>
                     <li>• Different domains: {analytics.totalStats.totalDomains}</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="devices" className="space-y-6">
-          <DeviceWiseBrowserCharts 
-            deviceData={deviceData?.data || null} 
-            browserData={data?.data} 
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-
-export { BrowserHistoryCharts };
-```
                 </div>
               </div>
             </CardContent>
