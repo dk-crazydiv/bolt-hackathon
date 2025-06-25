@@ -413,10 +413,19 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                             
                             // Format timestamp - improved logic
                             let formattedTime = 'N/A';
-                            let debugInfo = '';
+                            let debugInfo = 'No time data';
                             if (visitTime) {
                               try {
-                                console.log('🕐 Processing timestamp:', visitTime, 'Type:', typeof visitTime);
+                                // Log the first few records to understand the format
+                                if (index < 3) {
+                                  console.log(`🕐 Record ${index + 1} timestamp analysis:`, {
+                                    raw: visitTime,
+                                    type: typeof visitTime,
+                                    length: visitTime.toString().length,
+                                    sample: visitTime.toString().substring(0, 20)
+                                  });
+                                }
+                                
                                 let timestamp = visitTime;
                                 
                                 if (typeof timestamp === 'string') {
@@ -425,81 +434,110 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                                   if (!isNaN(parsed.getTime())) {
                                     formattedTime = parsed.toLocaleString();
                                     debugInfo = `String date: ${timestamp}`;
+                                    if (index < 3) console.log('🕐 Parsed as ISO string:', formattedTime);
                                   } else {
                                     // Try parsing as number string
                                     const numericTimestamp = parseInt(timestamp);
                                     if (!isNaN(numericTimestamp)) {
                                       timestamp = numericTimestamp;
                                       debugInfo = `Parsed from string: ${numericTimestamp}`;
+                                      if (index < 3) console.log('🕐 Converted string to number:', numericTimestamp);
                                     } else {
                                       formattedTime = timestamp; // Show as-is if can't parse
                                       debugInfo = `Unparseable string: ${timestamp}`;
+                                      if (index < 3) console.log('🕐 Unparseable string:', timestamp);
                                     }
                                   }
                                 }
                                 
                                 if (typeof timestamp === 'number') {
-                                  console.log('🕐 Processing numeric timestamp:', timestamp);
+                                  if (index < 3) console.log('🕐 Processing numeric timestamp:', timestamp, 'Length:', timestamp.toString().length);
                                   
-                                  // Handle Chrome timestamp (microseconds since January 1, 1601 UTC)
-                                  if (timestamp > 10000000000000000) {
-                                    // Very large number - likely Chrome timestamp in microseconds
+                                  // Determine timestamp format based on length and value
+                                  const timestampStr = timestamp.toString();
+                                  const timestampLength = timestampStr.length;
+                                  
+                                  if (timestampLength >= 17) {
+                                    // Chrome timestamp in microseconds since 1601
                                     const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
                                     const jsTimestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
-                                    console.log('🕐 Chrome timestamp conversion:', timestamp, '->', jsTimestamp);
+                                    if (index < 3) console.log('🕐 Chrome µs (17+ digits):', timestamp, '->', jsTimestamp);
                                     timestamp = jsTimestamp;
-                                    debugInfo = `Chrome µs: ${visitTime} -> ${jsTimestamp}`;
+                                    debugInfo = `Chrome µs (17+): ${visitTime} -> ${jsTimestamp}`;
                                   }
-                                  // Handle Chrome timestamp in microseconds (smaller range)
-                                  else if (timestamp > 10000000000000) {
-                                    // Check if this looks like a Chrome timestamp
+                                  else if (timestampLength === 16) {
+                                    // Chrome timestamp in microseconds (16 digits)
                                     const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
                                     const jsTimestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
-                                    
-                                    // Validate the result makes sense (between 1970 and 2030)
-                                    const testDate = new Date(jsTimestamp);
-                                    if (testDate.getFullYear() >= 1970 && testDate.getFullYear() <= 2030) {
-                                      console.log('🕐 Chrome timestamp conversion (medium):', timestamp, '->', jsTimestamp);
-                                      timestamp = jsTimestamp;
-                                      debugInfo = `Chrome µs (med): ${visitTime} -> ${jsTimestamp}`;
-                                    } else {
-                                      // Treat as milliseconds
-                                      console.log('🕐 Treating as milliseconds:', timestamp);
-                                      debugInfo = `Milliseconds: ${timestamp}`;
-                                    }
+                                    if (index < 3) console.log('🕐 Chrome µs (16 digits):', timestamp, '->', jsTimestamp);
+                                    timestamp = jsTimestamp;
+                                    debugInfo = `Chrome µs (16): ${visitTime} -> ${jsTimestamp}`;
                                   }
-                                  // Handle Unix timestamp in milliseconds
-                                  else if (timestamp > 1000000000000) {
-                                    console.log('🕐 Unix milliseconds:', timestamp);
-                                    debugInfo = `Unix ms: ${timestamp}`;
+                                  else if (timestampLength === 15) {
+                                    // Chrome timestamp in microseconds (15 digits)
+                                    const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
+                                    const jsTimestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                    if (index < 3) console.log('🕐 Chrome µs (15 digits):', timestamp, '->', jsTimestamp);
+                                    timestamp = jsTimestamp;
+                                    debugInfo = `Chrome µs (15): ${visitTime} -> ${jsTimestamp}`;
                                   }
-                                  // Handle Unix timestamp in seconds
-                                  else if (timestamp > 1000000000) {
+                                  else if (timestampLength === 14) {
+                                    // Chrome timestamp in microseconds (14 digits)
+                                    const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
+                                    const jsTimestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                    if (index < 3) console.log('🕐 Chrome µs (14 digits):', timestamp, '->', jsTimestamp);
+                                    timestamp = jsTimestamp;
+                                    debugInfo = `Chrome µs (14): ${visitTime} -> ${jsTimestamp}`;
+                                  }
+                                  else if (timestampLength === 13) {
+                                    // Unix timestamp in milliseconds
+                                    if (index < 3) console.log('🕐 Unix milliseconds (13 digits):', timestamp);
+                                    debugInfo = `Unix ms (13): ${timestamp}`;
+                                  }
+                                  else if (timestampLength === 10) {
+                                    // Unix timestamp in seconds
                                     timestamp = timestamp * 1000;
-                                    console.log('🕐 Unix seconds converted to ms:', timestamp);
-                                    debugInfo = `Unix s->ms: ${visitTime} -> ${timestamp}`;
+                                    if (index < 3) console.log('🕐 Unix seconds (10 digits) -> ms:', timestamp);
+                                    debugInfo = `Unix s->ms (10): ${visitTime} -> ${timestamp}`;
                                   }
-                                  // Very small numbers - might be days since epoch or other format
-                                  else {
-                                    console.log('🕐 Small timestamp, trying as days since epoch:', timestamp);
-                                    // Try as days since Unix epoch
-                                    const daysTimestamp = timestamp * 24 * 60 * 60 * 1000;
-                                    const testDate = new Date(daysTimestamp);
-                                    if (testDate.getFullYear() >= 1970 && testDate.getFullYear() <= 2030) {
-                                      timestamp = daysTimestamp;
-                                      debugInfo = `Days since epoch: ${visitTime} -> ${timestamp}`;
+                                  else if (timestampLength <= 9) {
+                                    // Very small number - might be days or other format
+                                    if (index < 3) console.log('🕐 Small number (≤9 digits), trying multiple formats:', timestamp);
+                                    
+                                    // Try as seconds first
+                                    let testTimestamp = timestamp * 1000;
+                                    let testDate = new Date(testTimestamp);
+                                    
+                                    if (testDate.getFullYear() >= 1990 && testDate.getFullYear() <= 2030) {
+                                      timestamp = testTimestamp;
+                                      debugInfo = `Small->seconds: ${visitTime} -> ${timestamp}`;
                                     } else {
-                                      debugInfo = `Unknown format: ${timestamp}`;
+                                      // Try as days since epoch
+                                      testTimestamp = timestamp * 24 * 60 * 60 * 1000;
+                                      testDate = new Date(testTimestamp);
+                                      if (testDate.getFullYear() >= 1990 && testDate.getFullYear() <= 2030) {
+                                        timestamp = testTimestamp;
+                                        debugInfo = `Days since epoch: ${visitTime} -> ${timestamp}`;
+                                      } else {
+                                        // Try as milliseconds directly
+                                        debugInfo = `Unknown small format: ${timestamp}`;
+                                      }
                                     }
+                                  }
+                                  else {
+                                    // Unusual length, try as-is
+                                    if (index < 3) console.log('🕐 Unusual length, trying as-is:', timestamp);
+                                    debugInfo = `Unusual length (${timestampLength}): ${timestamp}`;
                                   }
                                   
                                   const date = new Date(timestamp);
                                   if (!isNaN(date.getTime())) {
                                     formattedTime = date.toLocaleString();
-                                    console.log('🕐 Final formatted time:', formattedTime);
+                                    if (index < 3) console.log('🕐 Final formatted time:', formattedTime);
                                   } else {
                                     formattedTime = visitTime.toString();
                                     debugInfo = `Invalid date: ${timestamp}`;
+                                    if (index < 3) console.log('🕐 Invalid date result:', timestamp);
                                   }
                                 }
                               } catch (e) {
