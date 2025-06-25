@@ -411,18 +411,53 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                             const visitCount = record.visit_count || record.visitCount || 1;
                             const typedCount = record.typed_count || record.typedCount || 0;
                             
-                            // Format timestamp if it's a Chrome timestamp
+                            // Format timestamp - improved logic
                             let formattedTime = 'N/A';
                             if (visitTime) {
                               try {
                                 let timestamp = visitTime;
-                                if (typeof timestamp === 'number' && timestamp > 10000000000000) {
-                                  // Chrome timestamp conversion
-                                  const CHROME_EPOCH_OFFSET = 11644473600000000;
-                                  timestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                
+                                if (typeof timestamp === 'string') {
+                                  // Try parsing as ISO string first
+                                  const parsed = new Date(timestamp);
+                                  if (!isNaN(parsed.getTime())) {
+                                    formattedTime = parsed.toLocaleString();
+                                  } else {
+                                    // Try parsing as number string
+                                    const numericTimestamp = parseInt(timestamp);
+                                    if (!isNaN(numericTimestamp)) {
+                                      timestamp = numericTimestamp;
+                                    } else {
+                                      formattedTime = timestamp; // Show as-is if can't parse
+                                    }
+                                  }
                                 }
-                                formattedTime = new Date(timestamp).toLocaleString();
+                                
+                                if (typeof timestamp === 'number') {
+                                  // Handle Chrome timestamp (microseconds since January 1, 1601 UTC)
+                                  if (timestamp > 10000000000000) {
+                                    // Convert Chrome timestamp to JavaScript timestamp
+                                    const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
+                                    timestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                  }
+                                  // Handle Unix timestamp in milliseconds
+                                  else if (timestamp > 1000000000000) {
+                                    // Already in milliseconds, use as-is
+                                  }
+                                  // Handle Unix timestamp in seconds
+                                  else if (timestamp > 1000000000) {
+                                    timestamp = timestamp * 1000;
+                                  }
+                                  
+                                  const date = new Date(timestamp);
+                                  if (!isNaN(date.getTime())) {
+                                    formattedTime = date.toLocaleString();
+                                  } else {
+                                    formattedTime = visitTime.toString();
+                                  }
+                                }
                               } catch (e) {
+                                console.warn('Failed to parse timestamp:', visitTime, e);
                                 formattedTime = visitTime.toString();
                               }
                             }
@@ -441,7 +476,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                                   </div>
                                 </td>
                                 <td className="p-3 text-sm text-muted-foreground">
-                                  <div className="max-w-xs truncate" title={formattedTime}>
+                                  <div className="max-w-xs truncate" title={`Original: ${visitTime} | Formatted: ${formattedTime}`}>
                                     {formattedTime}
                                   </div>
                                 </td>
