@@ -5,6 +5,8 @@ import { DeviceWiseBrowserCharts } from './DeviceWiseBrowserCharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { ScrollArea } from '../ui/scroll-area';
+import { Button } from '../ui/button';
 import { Globe, Clock, TrendingUp, BarChart3, Activity, Calendar } from 'lucide-react';
 import {
   AreaChart,
@@ -62,6 +64,50 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     loadFullData();
   }, [data, deviceData, loadPageDataFromDB]);
 
+  // Extract raw records for data table
+  const rawRecords = useMemo(() => {
+    if (!data?.data) return [];
+    
+    console.log('🔍 Extracting raw records from data:', data.data);
+    
+    let records: any[] = [];
+    
+    // Handle different data structures
+    if (Array.isArray(data.data)) {
+      records = data.data;
+    } else if (data.data["Browser History"]) {
+      const browserHistory = data.data["Browser History"];
+      if (Array.isArray(browserHistory)) {
+        records = browserHistory;
+      } else if (typeof browserHistory === 'object') {
+        // Look for arrays within Browser History
+        for (const [key, value] of Object.entries(browserHistory)) {
+          if (Array.isArray(value) && value.length > 0) {
+            records = value;
+            break;
+          }
+        }
+      }
+    } else if (typeof data.data === 'object') {
+      // Look for common browser history patterns
+      const possibleKeys = ['visits', 'history', 'browsing_history', 'browser_history', 'urls', 'sites', 'pages'];
+      for (const key of possibleKeys) {
+        if (data.data[key] && Array.isArray(data.data[key])) {
+          records = data.data[key];
+          break;
+        }
+      }
+    }
+    
+    console.log('📊 Extracted records count:', records.length);
+    return records.slice(0, 1000); // Limit to first 1000 records for performance
+  }, [data]);
+
+  const [visibleRecords, setVisibleRecords] = React.useState(50);
+  
+  const loadMoreRecords = () => {
+    setVisibleRecords(prev => Math.min(prev + 50, rawRecords.length));
+  };
   const analytics = useMemo(() => {
     if (propAnalytics) {
       return propAnalytics;
@@ -287,6 +333,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="data-table">📋 Data Table</TabsTrigger>
           <TabsTrigger value="overview">📊 Overview</TabsTrigger>
           <TabsTrigger value="sites">🌐 Top Sites</TabsTrigger>
           <TabsTrigger value="domains">🏢 Domains</TabsTrigger>
@@ -294,6 +341,95 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           <TabsTrigger value="devices">📱 Devices</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="data-table" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>📋 Raw Browser History Data</CardTitle>
+              <CardDescription>
+                View all your browser history records in a simple table format. Showing {visibleRecords} of {rawRecords.length} records.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {rawRecords.length > 0 ? (
+                <div className="space-y-4">
+                  <ScrollArea className="h-[600px] w-full">
+                    <div className="space-y-2">
+                      {rawRecords.slice(0, visibleRecords).map((record, index) => (
+                        <div key={index} className="border rounded-lg p-4 bg-muted/30">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div>
+                                <span className="text-xs font-medium text-muted-foreground">URL:</span>
+                                <p className="text-sm font-mono break-all">
+                                  {record.url || record.URL || record.uri || 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-xs font-medium text-muted-foreground">Title:</span>
+                                <p className="text-sm">
+                                  {record.title || record.Title || record.page_title || 'No title'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div>
+                                <span className="text-xs font-medium text-muted-foreground">Visit Time:</span>
+                                <p className="text-sm">
+                                  {record.time_usec || record.last_visit_time || record.visit_time || record.visitTime || record.timestamp || 'N/A'}
+                                </p>
+                              </div>
+                              <div className="flex gap-4">
+                                {(record.visit_count || record.visitCount) && (
+                                  <div>
+                                    <span className="text-xs font-medium text-muted-foreground">Visits:</span>
+                                    <p className="text-sm">{record.visit_count || record.visitCount}</p>
+                                  </div>
+                                )}
+                                {(record.typed_count || record.typedCount) && (
+                                  <div>
+                                    <span className="text-xs font-medium text-muted-foreground">Typed:</span>
+                                    <p className="text-sm">{record.typed_count || record.typedCount}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Show additional fields if they exist */}
+                          <div className="mt-3 pt-3 border-t">
+                            <details className="text-xs">
+                              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                                Show all fields ({Object.keys(record).length} fields)
+                              </summary>
+                              <div className="mt-2 p-2 bg-muted rounded text-xs font-mono">
+                                <pre className="whitespace-pre-wrap break-all">
+                                  {JSON.stringify(record, null, 2)}
+                                </pre>
+                              </div>
+                            </details>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  
+                  {visibleRecords < rawRecords.length && (
+                    <div className="text-center">
+                      <Button onClick={loadMoreRecords} variant="outline">
+                        Load More Records ({rawRecords.length - visibleRecords} remaining)
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Globe className="h-12 w-12 mx-auto mb-4" />
+                  <p>No raw records found in the data</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
