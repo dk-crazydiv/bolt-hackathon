@@ -1097,36 +1097,6 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
         <TabsContent value="domains" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip 
-                      labelFormatter={(value) => `Date: ${value}`}
-                      formatter={(value, name) => [value, name === 'visits' ? 'Visits' : name]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="visits"
-                      stroke="#3b82f6"
-                      fill="#3b82f6"
-                      fillOpacity={0.6}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                    <div className="text-center">
-                      <BarChart3 className="h-8 w-8 mx-auto mb-2" />
-                      <p className="text-sm">No daily activity data available</p>
-                      <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
-                    </div>
-                  </div>
-                  </div>
-                )}
-              </div>
-              </CardContent>
-            </Card>
-
             <Card>
               <CardHeader>
                 <CardTitle>🏢 Top Domains</CardTitle>
