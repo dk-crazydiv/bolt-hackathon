@@ -413,8 +413,10 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                             
                             // Format timestamp - improved logic
                             let formattedTime = 'N/A';
+                            let debugInfo = '';
                             if (visitTime) {
                               try {
+                                console.log('🕐 Processing timestamp:', visitTime, 'Type:', typeof visitTime);
                                 let timestamp = visitTime;
                                 
                                 if (typeof timestamp === 'string') {
@@ -422,43 +424,88 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                                   const parsed = new Date(timestamp);
                                   if (!isNaN(parsed.getTime())) {
                                     formattedTime = parsed.toLocaleString();
+                                    debugInfo = `String date: ${timestamp}`;
                                   } else {
                                     // Try parsing as number string
                                     const numericTimestamp = parseInt(timestamp);
                                     if (!isNaN(numericTimestamp)) {
                                       timestamp = numericTimestamp;
+                                      debugInfo = `Parsed from string: ${numericTimestamp}`;
                                     } else {
                                       formattedTime = timestamp; // Show as-is if can't parse
+                                      debugInfo = `Unparseable string: ${timestamp}`;
                                     }
                                   }
                                 }
                                 
                                 if (typeof timestamp === 'number') {
+                                  console.log('🕐 Processing numeric timestamp:', timestamp);
+                                  
                                   // Handle Chrome timestamp (microseconds since January 1, 1601 UTC)
-                                  if (timestamp > 10000000000000) {
-                                    // Convert Chrome timestamp to JavaScript timestamp
+                                  if (timestamp > 10000000000000000) {
+                                    // Very large number - likely Chrome timestamp in microseconds
                                     const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
-                                    timestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                    const jsTimestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                    console.log('🕐 Chrome timestamp conversion:', timestamp, '->', jsTimestamp);
+                                    timestamp = jsTimestamp;
+                                    debugInfo = `Chrome µs: ${visitTime} -> ${jsTimestamp}`;
+                                  }
+                                  // Handle Chrome timestamp in microseconds (smaller range)
+                                  else if (timestamp > 10000000000000) {
+                                    // Check if this looks like a Chrome timestamp
+                                    const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
+                                    const jsTimestamp = Math.floor((timestamp - CHROME_EPOCH_OFFSET) / 1000);
+                                    
+                                    // Validate the result makes sense (between 1970 and 2030)
+                                    const testDate = new Date(jsTimestamp);
+                                    if (testDate.getFullYear() >= 1970 && testDate.getFullYear() <= 2030) {
+                                      console.log('🕐 Chrome timestamp conversion (medium):', timestamp, '->', jsTimestamp);
+                                      timestamp = jsTimestamp;
+                                      debugInfo = `Chrome µs (med): ${visitTime} -> ${jsTimestamp}`;
+                                    } else {
+                                      // Treat as milliseconds
+                                      console.log('🕐 Treating as milliseconds:', timestamp);
+                                      debugInfo = `Milliseconds: ${timestamp}`;
+                                    }
                                   }
                                   // Handle Unix timestamp in milliseconds
                                   else if (timestamp > 1000000000000) {
-                                    // Already in milliseconds, use as-is
+                                    console.log('🕐 Unix milliseconds:', timestamp);
+                                    debugInfo = `Unix ms: ${timestamp}`;
                                   }
                                   // Handle Unix timestamp in seconds
                                   else if (timestamp > 1000000000) {
                                     timestamp = timestamp * 1000;
+                                    console.log('🕐 Unix seconds converted to ms:', timestamp);
+                                    debugInfo = `Unix s->ms: ${visitTime} -> ${timestamp}`;
+                                  }
+                                  // Very small numbers - might be days since epoch or other format
+                                  else {
+                                    console.log('🕐 Small timestamp, trying as days since epoch:', timestamp);
+                                    // Try as days since Unix epoch
+                                    const daysTimestamp = timestamp * 24 * 60 * 60 * 1000;
+                                    const testDate = new Date(daysTimestamp);
+                                    if (testDate.getFullYear() >= 1970 && testDate.getFullYear() <= 2030) {
+                                      timestamp = daysTimestamp;
+                                      debugInfo = `Days since epoch: ${visitTime} -> ${timestamp}`;
+                                    } else {
+                                      debugInfo = `Unknown format: ${timestamp}`;
+                                    }
                                   }
                                   
                                   const date = new Date(timestamp);
                                   if (!isNaN(date.getTime())) {
                                     formattedTime = date.toLocaleString();
+                                    console.log('🕐 Final formatted time:', formattedTime);
                                   } else {
                                     formattedTime = visitTime.toString();
+                                    debugInfo = `Invalid date: ${timestamp}`;
                                   }
                                 }
                               } catch (e) {
                                 console.warn('Failed to parse timestamp:', visitTime, e);
                                 formattedTime = visitTime.toString();
+                                debugInfo = `Error: ${e.message}`;
                               }
                             }
                             
@@ -476,7 +523,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                                   </div>
                                 </td>
                                 <td className="p-3 text-sm text-muted-foreground">
-                                  <div className="max-w-xs truncate" title={`Original: ${visitTime} | Formatted: ${formattedTime}`}>
+                                  <div className="max-w-xs truncate" title={`Original: ${visitTime} | ${debugInfo} | Formatted: ${formattedTime}`}>
                                     {formattedTime}
                                   </div>
                                 </td>
