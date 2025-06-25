@@ -1,11 +1,39 @@
-Here's the fixed version with all missing closing brackets added:
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { DeviceWiseBrowserCharts } from './DeviceWiseBrowserCharts';
 
-```jsx
+interface BrowserHistoryChartsProps {
+  data?: any;
+  deviceData?: any;
+  analytics?: any;
+}
+
+function BrowserHistoryCharts({ data, deviceData, analytics }: BrowserHistoryChartsProps) {
+  return (
+    <div className="space-y-6">
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="devices">Device Analysis</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Browser History Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    Quick Stats
+                  </h3>
                   <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                    <li>• Most visited domain: {analytics.topDomains[0]?.domain || 'None'}</li>
-                    <li>• Most typed site: {analytics.totalStats.mostTypedSite}</li>
-                    <li>• Unique sites visited: {analytics.totalStats.totalSites}</li>
-                    <li>• Different domains: {analytics.totalStats.totalDomains}</li>
+                    <li>• Most visited domain: {analytics?.topDomains?.[0]?.domain || 'None'}</li>
+                    <li>• Most typed site: {analytics?.totalStats?.mostTypedSite || 'None'}</li>
+                    <li>• Unique sites visited: {analytics?.totalStats?.totalSites || 0}</li>
+                    <li>• Different domains: {analytics?.totalStats?.totalDomains || 0}</li>
                   </ul>
                 </div>
               </div>
@@ -25,14 +53,3 @@ Here's the fixed version with all missing closing brackets added:
 }
 
 export { BrowserHistoryCharts };
-```
-
-I added the missing closing tags for:
-- The unordered list (`</ul>`)
-- The content divs (`</div>`)
-- The card components (`</Card>`)
-- The tabs content (`</TabsContent>`)
-- The tabs container (`</Tabs>`)
-- The main container div (`</div>`)
-- The component function (`}`)
-- The export statement (`}`)
