@@ -649,84 +649,370 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           </Card>
         </TabsContent>
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            {/* Monthly Timeline Chart */}
             <Card>
               <CardHeader>
-                <CardTitle>📈 Daily Browsing Activity</CardTitle>
-                <CardDescription>Your browsing activity over time</CardDescription>
+                <CardTitle>📈 Monthly Browsing Timeline</CardTitle>
+                <CardDescription>Total visits grouped by month across your entire browsing history</CardDescription>
               </CardHeader>
               <CardContent>
-                {analytics.dailyActivity && analytics.dailyActivity.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <AreaChart data={analytics.dailyActivity.slice(-30)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip 
-                      labelFormatter={(value) => `Date: ${value}`}
-                      formatter={(value, name) => [value, name === 'visits' ? 'Visits' : name]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="visits"
-                      stroke="#3b82f6"
-                      fill="#3b82f6"
-                      fillOpacity={0.6}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                    <div className="text-center">
-                      <BarChart3 className="h-8 w-8 mx-auto mb-2" />
-                      <p className="text-sm">No daily activity data available</p>
-                      <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
+                {(() => {
+                  // Generate monthly data from daily activity
+                  const monthlyData = React.useMemo(() => {
+                    if (!analytics.dailyActivity || analytics.dailyActivity.length === 0) return [];
+                    
+                    const monthlyMap = new Map<string, number>();
+                    
+                    analytics.dailyActivity.forEach(day => {
+                      if (!day.date) return;
+                      
+                      try {
+                        const date = new Date(day.date);
+                        if (isNaN(date.getTime())) return;
+                        
+                        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + (day.visits || 0));
+                      } catch (e) {
+                        console.warn('Failed to process date:', day.date, e);
+                      }
+                    });
+                    
+                    const sortedMonths = Array.from(monthlyMap.entries())
+                      .map(([month, visits]) => ({
+                        month,
+                        visits,
+                        displayMonth: (() => {
+                          try {
+                            const [year, monthNum] = month.split('-');
+                            const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                          } catch {
+                            return month;
+                          }
+                        })()
+                      }))
+                      .sort((a, b) => a.month.localeCompare(b.month));
+                    
+                    console.log('📊 Monthly data generated:', sortedMonths.length, 'months');
+                    console.log('📊 Sample monthly data:', sortedMonths.slice(0, 3));
+                    
+                    return sortedMonths;
+                  }, [analytics.dailyActivity]);
+                  
+                  return monthlyData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={monthlyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="displayMonth" 
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                          interval={Math.max(1, Math.floor(monthlyData.length / 12))}
+                        />
+                        <YAxis />
+                        <Tooltip 
+                          labelFormatter={(value) => `Month: ${value}`}
+                          formatter={(value, name) => [value?.toLocaleString(), 'Total Visits']}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="visits"
+                          stroke="#3b82f6"
+                          fill="#3b82f6"
+                          fillOpacity={0.6}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                      <div className="text-center">
+                        <BarChart3 className="h-8 w-8 mx-auto mb-2" />
+                        <p className="text-sm">No monthly activity data available</p>
+                        <p className="text-xs">Daily activity: {analytics.dailyActivity?.length || 0} days</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </CardContent>
             </Card>
+            
+            {/* Daily and Hourly Activity Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>📈 Recent Daily Activity</CardTitle>
+                  <CardDescription>Your browsing activity over the last 30 days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analytics.dailyActivity && analytics.dailyActivity.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={analytics.dailyActivity.slice(-30)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(value) => {
+                          try {
+                            return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          } catch {
+                            return value;
+                          }
+                        }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis />
+                      <Tooltip 
+                        labelFormatter={(value) => {
+                          try {
+                            return `Date: ${new Date(value).toLocaleDateString()}`;
+                          } catch {
+                            return `Date: ${value}`;
+                          }
+                        }}
+                        formatter={(value, name) => [value, name === 'visits' ? 'Visits' : name]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="visits"
+                        stroke="#3b82f6"
+                        fill="#3b82f6"
+                        fillOpacity={0.6}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                      <div className="text-center">
+                        <BarChart3 className="h-8 w-8 mx-auto mb-2" />
+                        <p className="text-sm">No daily activity data available</p>
+                        <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>🕐 Hourly Activity Pattern</CardTitle>
-                <CardDescription>When you browse the most</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {analytics.hourlyActivity && analytics.hourlyActivity.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={analytics.hourlyActivity}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis />
-                    <Tooltip 
-                      labelFormatter={(value) => `Hour: ${value}:00`}
-                      formatter={(value, name) => [value, name === 'visits' ? 'Visits' : name]}
-                    />
-                    <Bar dataKey="visits" fill="#10b981" />
-                  </BarChart>
-                </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                    <div className="text-center">
-                      <Clock className="h-8 w-8 mx-auto mb-2" />
-                      <p className="text-sm">No hourly activity data available</p>
-                      <p className="text-xs">Data: {analytics.hourlyActivity?.length || 0} hours</p>
-                    </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>🕐 Hourly Activity Pattern</CardTitle>
+                  <CardDescription>When you browse the most throughout the day</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    // Enhanced hourly activity processing
+                    const hourlyData = React.useMemo(() => {
+                      if (!analytics.hourlyActivity || analytics.hourlyActivity.length === 0) {
+                        console.log('⚠️ No hourly activity data available');
+                        return [];
+                      }
+                      
+                      console.log('📊 Processing hourly activity:', analytics.hourlyActivity.length, 'entries');
+                      console.log('📊 Sample hourly data:', analytics.hourlyActivity.slice(0, 3));
+                      
+                      // Ensure we have all 24 hours and format properly
+                      const processedHourly = Array.from({ length: 24 }, (_, hour) => {
+                        const existingData = analytics.hourlyActivity.find(h => h.hour === hour);
+                        const visits = existingData?.visits || 0;
+                        
+                        return {
+                          hour,
+                          visits,
+                          displayHour: `${hour.toString().padStart(2, '0')}:00`,
+                          timeLabel: hour === 0 ? '12 AM' : 
+                                   hour < 12 ? `${hour} AM` : 
+                                   hour === 12 ? '12 PM' : 
+                                   `${hour - 12} PM`
+                        };
+                      });
+                      
+                      const totalVisits = processedHourly.reduce((sum, h) => sum + h.visits, 0);
+                      console.log('📊 Processed hourly data - Total visits:', totalVisits);
+                      console.log('📊 Peak hours:', processedHourly
+                        .sort((a, b) => b.visits - a.visits)
+                        .slice(0, 3)
+                        .map(h => `${h.timeLabel}: ${h.visits}`)
+                      );
+                      
+                      return processedHourly;
+                    }, [analytics.hourlyActivity]);
+                    
+                    return hourlyData.length > 0 && hourlyData.some(h => h.visits > 0) ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={hourlyData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="timeLabel" 
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                            interval={1}
+                          />
+                          <YAxis />
+                          <Tooltip 
+                            labelFormatter={(value) => `Time: ${value}`}
+                            formatter={(value, name) => [value?.toLocaleString(), 'Visits']}
+                          />
+                          <Bar 
+                            dataKey="visits" 
+                            fill="#10b981"
+                            radius={[2, 2, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                        <div className="text-center">
+                          <Clock className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-sm">No hourly activity data available</p>
+                          <p className="text-xs">
+                            Data: {analytics.hourlyActivity?.length || 0} hours | 
+                            Total visits: {hourlyData.reduce((sum, h) => sum + h.visits, 0)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Enhanced Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">📊 Browsing Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Active Days:</span>
+                    <Badge variant="outline">{analytics.dailyActivity?.length || 0}</Badge>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Active Months:</span>
+                    <Badge variant="outline">
+                      {(() => {
+                        if (!analytics.dailyActivity || analytics.dailyActivity.length === 0) return 0;
+                        const months = new Set(analytics.dailyActivity.map(day => {
+                          try {
+                            const date = new Date(day.date);
+                            return `${date.getFullYear()}-${date.getMonth()}`;
+                          } catch {
+                            return null;
+                          }
+                        }).filter(Boolean));
+                        return months.size;
+                      })()}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Peak Hour:</span>
+                    <Badge variant="secondary">
+                      {(() => {
+                        if (!analytics.hourlyActivity || analytics.hourlyActivity.length === 0) return 'N/A';
+                        const peakHour = analytics.hourlyActivity.reduce((max, hour) => 
+                          hour.visits > max.visits ? hour : max, { hour: 0, visits: 0 }
+                        );
+                        return peakHour.hour === 0 ? '12 AM' : 
+                               peakHour.hour < 12 ? `${peakHour.hour} AM` : 
+                               peakHour.hour === 12 ? '12 PM' : 
+                               `${peakHour.hour - 12} PM`;
+                      })()}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">🏆 Top Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Busiest Day:</span>
+                    <Badge variant="outline">
+                      {(() => {
+                        if (!analytics.dailyActivity || analytics.dailyActivity.length === 0) return 'N/A';
+                        const busiestDay = analytics.dailyActivity.reduce((max, day) => 
+                          day.visits > max.visits ? day : max, { date: '', visits: 0 }
+                        );
+                        try {
+                          return new Date(busiestDay.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        } catch {
+                          return 'N/A';
+                        }
+                      })()}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Most Active Day:</span>
+                    <Badge variant="secondary">
+                      {analytics.weeklyPattern?.reduce((max, day) => 
+                        day.visits > max.visits ? day : max, { day: 'None', visits: 0 }
+                      ).day || 'N/A'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Avg Daily Visits:</span>
+                    <Badge variant="outline">
+                      {(() => {
+                        if (!analytics.dailyActivity || analytics.dailyActivity.length === 0) return '0';
+                        const totalVisits = analytics.dailyActivity.reduce((sum, day) => sum + day.visits, 0);
+                        return Math.round(totalVisits / analytics.dailyActivity.length).toLocaleString();
+                      })()}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">📈 Trends</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Data Range:</span>
+                    <Badge variant="outline">
+                      {(() => {
+                        if (!analytics.dailyActivity || analytics.dailyActivity.length === 0) return 'N/A';
+                        const dates = analytics.dailyActivity.map(d => new Date(d.date)).filter(d => !isNaN(d.getTime()));
+                        if (dates.length === 0) return 'N/A';
+                        const earliest = new Date(Math.min(...dates.map(d => d.getTime())));
+                        const latest = new Date(Math.max(...dates.map(d => d.getTime())));
+                        const daysDiff = Math.ceil((latest.getTime() - earliest.getTime()) / (1000 * 60 * 60 * 24));
+                        return `${daysDiff} days`;
+                      })()}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Sessions:</span>
+                    <Badge variant="secondary">{analytics.sessions?.length || 0}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Avg Session:</span>
+                    <Badge variant="outline">
+                      {(() => {
+                        if (!analytics.sessions || analytics.sessions.length === 0) return '0 min';
+                        const avgDuration = analytics.sessions.reduce((sum, s) => sum + s.duration, 0) / analytics.sessions.length;
+                        return `${Math.round(avgDuration / 60000)} min`;
+                      })()}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
           
-          {/* Debug Information Card */}
+          {/* Debug Information Card - Enhanced */}
           <Card>
             <CardHeader>
-              <CardTitle>🔍 Data Debug Information</CardTitle>
-              <CardDescription>Debugging information for chart data</CardDescription>
+              <CardTitle>🔍 Data Analysis Debug</CardTitle>
+              <CardDescription>Detailed information about your browsing data processing</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded">
                   <h4 className="font-semibold mb-2">📊 Analytics Data</h4>
                   <div className="space-y-1">
@@ -757,6 +1043,16 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded">
+                  <h4 className="font-semibold mb-2">🔢 Statistics</h4>
+                  <div className="space-y-1">
+                    <div>Total Hourly Visits: {analytics.hourlyActivity?.reduce((sum, h) => sum + h.visits, 0) || 0}</div>
+                    <div>Total Daily Visits: {analytics.dailyActivity?.reduce((sum, d) => sum + d.visits, 0) || 0}</div>
+                    <div>Peak Hour Visits: {analytics.hourlyActivity?.reduce((max, h) => Math.max(max, h.visits), 0) || 0}</div>
+                    <div>Peak Day Visits: {analytics.dailyActivity?.reduce((max, d) => Math.max(max, d.visits), 0) || 0}</div>
                   </div>
                 </div>
               </div>
@@ -801,6 +1097,34 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
         <TabsContent value="domains" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip 
+                      labelFormatter={(value) => `Date: ${value}`}
+                      formatter={(value, name) => [value, name === 'visits' ? 'Visits' : name]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="visits"
+                      stroke="#3b82f6"
+                      fill="#3b82f6"
+                      fillOpacity={0.6}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                    <div className="text-center">
+                      <BarChart3 className="h-8 w-8 mx-auto mb-2" />
+                      <p className="text-sm">No daily activity data available</p>
+                      <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>🏢 Top Domains</CardTitle>
@@ -904,6 +1228,25 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                     <li>• Unique sites visited: {analytics.totalStats.totalSites}</li>
                     <li>• Different domains: {analytics.totalStats.totalDomains}</li>
                   </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="devices" className="space-y-6">
+          <DeviceWiseBrowserCharts 
+            deviceData={deviceData?.data || null} 
+            browserData={data?.data} 
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+export { BrowserHistoryCharts };
+```
                 </div>
               </div>
             </CardContent>
