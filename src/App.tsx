@@ -8,6 +8,7 @@ import { PlaystoreAppsPage } from './pages/PlaystoreAppsPage'
 import { FitbitDataPage } from './pages/FitbitDataPage'
 import { GoogleMapReviewsPage } from './pages/GoogleMapReviewsPage'
 import { DebugJsonPage } from './pages/DebugJsonPage'
+import { FilesCenterPage } from './pages/FilesCenterPage'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/fitbit-data" element={<FitbitDataPage />} />
           <Route path="/google-map-reviews" element={<GoogleMapReviewsPage />} />
           <Route path="/debug-json" element={<DebugJsonPage />} />
+          <Route path="/files-center" element={<FilesCenterPage />} />
         </Routes>
       </AppLayout>
     </Router>
