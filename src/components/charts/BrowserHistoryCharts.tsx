@@ -1123,6 +1123,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </div>
                   </div>
                 )}
+              </div>
               </CardContent>
             </Card>
 
