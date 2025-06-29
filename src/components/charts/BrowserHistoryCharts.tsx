@@ -156,9 +156,36 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         length: Array.isArray(data.data) ? data.data.length : 'not array'
       });
       
+      // Log first few items to understand the structure
+      if (Array.isArray(data.data) && data.data.length > 0) {
+        console.log('📊 Sample data items:');
+        data.data.slice(0, 3).forEach((item, index) => {
+          console.log(`📊 Item ${index}:`, {
+            url: item?.url,
+            title: item?.title,
+            time_usec: item?.time_usec,
+            last_visit_time: item?.last_visit_time,
+            visit_count: item?.visit_count,
+            typed_count: item?.typed_count
+          });
+        });
+      }
+      
       try {
       // Add progress tracking during analysis
       const analyzer = new BrowserHistoryAnalyzer(data.data);
+      
+      // Check if analyzer found valid data before running full analysis
+      if (!analyzer.hasValidData()) {
+        console.log('❌ Analyzer found no valid data');
+        setProcessingStatus({
+          stage: 'error',
+          message: 'No valid browser history found',
+          details: 'The data was parsed but contains no recognizable browser visits'
+        })
+        return null;
+      }
+      
       const result = analyzer.analyze();
       
       

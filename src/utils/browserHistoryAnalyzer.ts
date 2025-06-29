@@ -116,8 +116,31 @@ export class BrowserHistoryAnalyzer {
     
     let visits: any[] = []
     
+    // PRIORITY: Handle Chrome visits.json format specifically
+    // Chrome exports often have this exact structure
+    if (Array.isArray(data) && data.length > 0) {
+      const sample = data[0]
+      console.log('🔍 Direct array sample:', sample);
+      
+      // Check if this looks like Chrome history format
+      if (sample && typeof sample === 'object') {
+        const hasUrl = sample.url || sample.URL
+        const hasTime = sample.time_usec || sample.last_visit_time || sample.visit_time
+        const hasTitle = sample.title || sample.page_title
+        
+        if (hasUrl || hasTime) {
+          console.log('✅ Detected Chrome visits format in direct array');
+          visits = data
+        }
+      }
+    }
+    
+    // If we found visits in direct array, skip other checks
+    if (visits.length > 0) {
+      console.log('✅ Using direct array with', visits.length, 'items');
+    }
     // Handle direct array (most common for chrome-visits.json)
-    if (Array.isArray(data)) {
+    else if (Array.isArray(data)) {
       console.log('✅ Data is direct array with', data.length, 'items');
       visits = data
     }
@@ -233,25 +256,37 @@ export class BrowserHistoryAnalyzer {
       .filter(visit => {
         // Validate URL
         if (!visit.url || typeof visit.url !== 'string') {
+          console.log('❌ Invalid URL:', visit.url);
           return false
         }
         
-        const hasValidUrl = visit.url && (
+        // More lenient URL validation for Chrome data
+        const hasValidUrl = visit.url.length > 0 && (
           visit.url.startsWith('http') || 
+          visit.url.startsWith('https') ||
           visit.url.startsWith('www') || 
           visit.url.includes('.') ||
-          visit.url.length > 3
+          visit.url.includes('://') ||
+          visit.url.length > 5
         )
         
         if (!hasValidUrl) {
+          console.log('❌ Invalid URL format:', visit.url);
           return false
         }
         
         // Validate timestamp
-        if (!visit.timestamp || visit.timestamp <= 0 || isNaN(visit.timestamp)) {
+        const hasValidTimestamp = visit.timestamp && 
+          visit.timestamp > 0 && 
+          !isNaN(visit.timestamp) &&
+          visit.timestamp > 946684800000 // After year 2000
+        
+        if (!hasValidTimestamp) {
+          console.log('❌ Invalid timestamp:', visit.timestamp, 'for URL:', visit.url);
           return false
         }
         
+        console.log('✅ Valid visit:', { url: visit.url.substring(0, 50), timestamp: visit.timestamp });
         return true
       })
     
@@ -260,28 +295,36 @@ export class BrowserHistoryAnalyzer {
   }
 
   private parseTimestamp(time: any): number {
+    console.log('🕐 Parsing timestamp:', time, 'type:', typeof time);
+    
     if (typeof time === 'number') {
       // Handle Chrome timestamp (microseconds since January 1, 1601 UTC)
       if (time > 10000000000000) {
         // Convert Chrome timestamp to JavaScript timestamp
         const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
         const jsTimestamp = Math.floor((time - CHROME_EPOCH_OFFSET) / 1000)
+        console.log('🕐 Chrome timestamp converted:', time, '->', jsTimestamp);
         return jsTimestamp
       }
       // Handle Unix timestamp in milliseconds
       if (time > 1000000000000) {
+        console.log('🕐 Unix timestamp (ms):', time);
         return time
       }
       // Handle Unix timestamp in seconds
       if (time > 1000000000) {
+        console.log('🕐 Unix timestamp (s) converted:', time, '->', time * 1000);
         return time * 1000
       }
+      console.log('🕐 Small number timestamp:', time);
       return time
     }
     if (typeof time === 'string') {
       const parsed = new Date(time).getTime()
+      console.log('🕐 String timestamp parsed:', time, '->', parsed);
       return isNaN(parsed) ? Date.now() : parsed
     }
+    console.log('🕐 Fallback to current time for:', time);
     return Date.now()
   }
 
