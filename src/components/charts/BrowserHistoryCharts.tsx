@@ -301,7 +301,26 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
               <CardDescription>Complete timeline showing browser usage frequency over time</CardDescription>
             </CardHeader>
             <CardContent>
-              {analytics.dailyActivity && analytics.dailyActivity.length > 0 ? (
+              {(() => {
+                console.log('🔍 Timeline Chart Debug:', {
+                  hasAnalytics: !!analytics,
+                  hasDailyActivity: !!(analytics?.dailyActivity),
+                  dailyActivityLength: analytics?.dailyActivity?.length || 0,
+                  sampleDailyActivity: analytics?.dailyActivity?.slice(0, 2) || [],
+                  totalVisits: analytics?.totalStats?.totalVisits || 0
+                })
+                
+                const timelineData = analytics?.dailyActivity || []
+                const hasValidTimelineData = timelineData.length > 0 && 
+                  timelineData.some(item => item.date && item.visits > 0)
+                
+                console.log('📊 Timeline validation:', {
+                  hasValidTimelineData,
+                  firstValidItem: timelineData.find(item => item.date && item.visits > 0)
+                })
+                
+                return hasValidTimelineData
+              })() ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={analytics.dailyActivity}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -349,7 +368,17 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   <div className="text-center">
                     <Clock className="h-8 w-8 mx-auto mb-2" />
                     <p className="text-sm">No timeline data available</p>
-                    <p className="text-xs">Upload browser history data to see usage timeline</p>
+                    <p className="text-xs">
+                      {analytics?.totalStats?.totalVisits > 0 
+                        ? 'Processing timeline data...' 
+                        : 'Upload browser history data to see usage timeline'
+                      }
+                    </p>
+                    {analytics?.dailyActivity && (
+                      <p className="text-xs mt-2 text-blue-600">
+                        Debug: Found {analytics.dailyActivity.length} daily entries
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
