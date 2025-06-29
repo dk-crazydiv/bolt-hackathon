@@ -1,4 +1,5 @@
 import { ParsedData } from '@/types'
+import { performance } from 'perf_hooks'
 
 export interface ChromeVisit {
   // Enhanced interface to handle Chrome export format
@@ -71,6 +72,7 @@ export class BrowserHistoryAnalyzer {
   private visits: ChromeVisit[] = []
 
   constructor(data: any) {
+    const startTime = performance.now()
     console.log('🔍 === BROWSER HISTORY ANALYZER INITIALIZATION ===');
     console.log('🔍 Input data type:', typeof data, 'isArray:', Array.isArray(data));
     console.log('🔍 Input data sample:', Array.isArray(data) ? data.slice(0, 2) : data);
@@ -87,6 +89,7 @@ export class BrowserHistoryAnalyzer {
     }
     
     this.visits = this.parseVisits(data)
+    const endTime = performance.now()
     console.log('✅ Final parsed visits count:', this.visits.length)
     console.log('✅ Data validation result:', this.hasValidData())
     
@@ -102,6 +105,7 @@ export class BrowserHistoryAnalyzer {
     // Log summary for debugging
     const summary = this.getDataSummary()
     console.log('📊 Data summary:', summary)
+    console.log(`⏱️ Initialization took ${endTime - startTime}ms`)
   }
   
   public hasValidData(): boolean {
@@ -122,6 +126,7 @@ export class BrowserHistoryAnalyzer {
 
   private parseVisits(data: any): ChromeVisit[] {
     console.log('🔍 === PARSING VISITS ===');
+    const parseStartTime = performance.now()
     if (!data) return []
     
     let visits: any[] = []
@@ -234,6 +239,12 @@ export class BrowserHistoryAnalyzer {
     console.log('🔍 Raw visits found:', visits.length);
     if (visits.length > 0) {
       console.log('🔍 Sample raw visit:', visits[0]);
+      
+      // Add timeout protection for large datasets
+      if (visits.length > 50000) {
+        console.log('⚠️ Large dataset detected, limiting to first 50000 visits for performance');
+        visits = visits.slice(0, 50000)
+      }
       console.log('🔍 Raw visit keys:', Object.keys(visits[0] || {}));
     }
 
@@ -241,12 +252,19 @@ export class BrowserHistoryAnalyzer {
     const processedVisits = visits
       .filter(visit => {
         if (!visit || typeof visit !== 'object') {
+          console.log('❌ Filtered out non-object visit:', typeof visit);
           return false
         }
         return true
       })
       .map(visit => {
         console.log('🔍 Processing visit:', { url: visit?.url, time_usec: visit?.time_usec, id: visit?.id });
+        
+        // Add processing timeout check
+        const currentTime = performance.now()
+        if (currentTime - parseStartTime > 30000) { // 30 second timeout
+          throw new Error('Processing timeout - dataset too large or complex')
+        }
         
         // Extract time with priority order for Chrome data
         const visitTime = visit.time_usec || 
@@ -314,6 +332,7 @@ export class BrowserHistoryAnalyzer {
         return true
       })
     
+    console.log(`⏱️ Parsing took ${performance.now() - parseStartTime}ms`)
     console.log('✅ Final processed visits count:', processedVisits.length);
     console.log('✅ Sample processed visit:', processedVisits[0]);
     return processedVisits
@@ -321,6 +340,12 @@ export class BrowserHistoryAnalyzer {
 
   private parseTimestamp(time: any): number {
     console.log('🕐 Parsing timestamp:', time, 'type:', typeof time);
+    
+    // Add validation to prevent infinite loops
+    if (time === null || time === undefined) {
+      console.log('🕐 Null/undefined timestamp, using current time');
+      return Date.now()
+    }
     
     if (typeof time === 'number') {
       // Handle Chrome timestamp (microseconds since January 1, 1601 UTC)
@@ -547,6 +572,7 @@ export class BrowserHistoryAnalyzer {
 
   analyze(): BrowserAnalytics {
     console.log('🔍 === STARTING ANALYSIS ===');
+    const analysisStartTime = performance.now()
     
     // Add early validation with detailed logging
     if (!this.hasValidData()) {
@@ -556,6 +582,11 @@ export class BrowserHistoryAnalyzer {
     
     console.log('✅ Analyzing', this.visits.length, 'visits');
     
+    // Add performance monitoring
+    if (this.visits.length > 10000) {
+      console.log('⚠️ Large dataset analysis - this may take a moment...');
+    }
+    
     // Log sample visits for debugging
     console.log('📊 Sample visits for analysis:');
     this.visits.slice(0, 3).forEach((visit, index) => {
@@ -563,6 +594,7 @@ export class BrowserHistoryAnalyzer {
     });
     
     // Analyze top domains
+    console.log('🔍 Analyzing domains...');
     const domainMap = new Map<string, DomainStats>()
     
     this.visits.forEach(visit => {
@@ -594,6 +626,7 @@ export class BrowserHistoryAnalyzer {
       .slice(0, 20)
 
     // Analyze top sites
+    console.log('🔍 Analyzing sites...');
     const siteMap = new Map<string, { url: string; title: string; visitCount: number; domain: string; typedCount: number }>()
     
     this.visits.forEach(visit => {
@@ -614,9 +647,11 @@ export class BrowserHistoryAnalyzer {
       .slice(0, 20)
 
     // Analyze sessions
+    console.log('🔍 Analyzing sessions...');
     const sessions = this.groupVisitsBySession(this.visits)
 
     // Daily activity
+    console.log('🔍 Analyzing daily activity...');
     const dailyMap = new Map<string, { visits: number; duration: number }>()
     this.visits.forEach(visit => {
       console.log('📊 Processing visit for daily activity:', { url: visit.url, timestamp: visit.timestamp });
@@ -640,6 +675,7 @@ export class BrowserHistoryAnalyzer {
 
     console.log('📊 Generated daily activity:', dailyActivity.length, 'entries');
     // Hourly activity
+    console.log('🔍 Analyzing hourly activity...');
     const hourlyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
       if (!visit.timestamp || visit.timestamp <= 0) return
@@ -667,6 +703,7 @@ export class BrowserHistoryAnalyzer {
     console.log('📊 Generated hourly activity:', hourlyActivity.filter(h => h.visits > 0).length, 'active hours');
 
     // Weekly pattern
+    console.log('🔍 Analyzing weekly patterns...');
     console.log('📊 Generating weekly pattern...');
     const weeklyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
@@ -695,6 +732,7 @@ export class BrowserHistoryAnalyzer {
     console.log('📊 Generated weekly pattern:', weeklyPattern.map(w => ({ day: w.day, visits: w.visits })));
 
     // Advanced analyses
+    console.log('🔍 Running advanced analyses...');
     const timeBasedUrls = this.analyzeTimeBasedUrls()
     const hourlyUrlDistribution = this.analyzeHourlyUrlDistribution()
     const browsingSessions = this.analyzeBrowsingSessionsOverTime()
@@ -728,6 +766,7 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
+    console.log(`⏱️ Total analysis took ${performance.now() - analysisStartTime}ms`)
     console.log('📊 Final analysis stats:', { totalVisits, totalSites, totalDomains });
     console.log('✅ Analysis complete:', {
       dailyActivityCount: result.dailyActivity.length,
