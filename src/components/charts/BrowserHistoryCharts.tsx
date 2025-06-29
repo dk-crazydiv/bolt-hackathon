@@ -133,6 +133,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   const analytics = useMemo(() => {
     if (propAnalytics) {
       console.log('🔍 Using prop analytics:', propAnalytics);
+      console.log('🔍 Using prop analytics:', propAnalytics);
       setProcessingStatus({
         stage: 'complete',
         message: 'Using provided analytics data'
@@ -142,6 +143,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     
     if (data && data.data) {
       console.log('🔍 === ENHANCED ANALYSIS PIPELINE ===');
+      console.log('🔍 === STARTING COMPREHENSIVE BROWSER HISTORY ANALYSIS ===');
       console.log('🔍 === STARTING BROWSER HISTORY ANALYSIS ===');
       console.log('🔍 Processing data for analysis...');
       setProcessingStatus({
@@ -149,6 +151,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         message: 'Analyzing browser history data...',
         details: 'Processing visits, domains, and usage patterns'
       })
+      
       console.log('📊 Raw data passed to analyzer:', {
         type: typeof data.data,
         isArray: Array.isArray(data.data),
@@ -156,6 +159,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         length: Array.isArray(data.data) ? data.data.length : 'not array'
       });
       
+      // Enhanced sample data logging
       // Log first few items to understand the structure
       if (Array.isArray(data.data) && data.data.length > 0) {
         console.log('📊 Sample data items:');
@@ -172,6 +176,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       }
       
       try {
+        console.log('🔍 Creating BrowserHistoryAnalyzer...');
       // Add progress tracking during analysis
       const analyzer = new BrowserHistoryAnalyzer(data.data);
       
@@ -186,6 +191,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         return null;
       }
       
+      console.log('🔍 Running analysis...');
       const result = analyzer.analyze();
       
       
@@ -200,6 +206,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         totalSites: result.totalStats?.totalSites || 0
       });
       
+      // More detailed chart data validation
       // Enhanced chart data validation
       // Log sample data for charts
       if (result.dailyActivity && result.dailyActivity.length > 0) {
@@ -220,6 +227,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         console.log('❌ No hourly activity data generated');
       }
       
+      console.log('🔍 Setting status to complete...');
       setProcessingStatus({
         stage: 'complete',
         message: 'Analysis complete!',
@@ -229,6 +237,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       return result;
       } catch (error) {
         console.error('❌ Error during analysis:', error);
+        console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         console.error('❌ Data that caused error:', data.data);
         setProcessingStatus({
           stage: 'error',
@@ -240,6 +249,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       
     }
     
+    console.log('❌ No data condition reached');
     console.log('❌ No data available for analysis:', { 
       hasData: !!data, 
       hasDataProperty: !!(data?.data),
@@ -253,6 +263,20 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     })
     return null;
   }, [propAnalytics, data]);
+
+  // Add effect to monitor analytics changes
+  React.useEffect(() => {
+    console.log('🔍 Analytics state changed:', {
+      hasAnalytics: !!analytics,
+      analyticsType: typeof analytics,
+      topSitesLength: analytics?.topSites?.length || 0,
+      totalVisits: analytics?.totalStats?.totalVisits || 0
+    });
+    
+    if (analytics) {
+      console.log('✅ Analytics ready for rendering');
+    }
+  }, [analytics]);
 
   // Enhanced loading state handling
   // Show loading state while data is being loaded from IndexedDB
