@@ -1,4 +1,4 @@
-// Enhanced browser history charts with better error handling and debugging
+// Enhanced browser history charts with comprehensive error handling and user feedback
 import React, { useMemo } from 'react';
 import { useDataStore } from '../../store/dataStore';
 import { BrowserHistoryAnalyzer } from '../../utils/browserHistoryAnalyzer';
@@ -6,7 +6,7 @@ import { DeviceWiseBrowserCharts } from './DeviceWiseBrowserCharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Globe, Clock, TrendingUp, BarChart3, Activity, Calendar } from 'lucide-react';
+import { Globe, Clock, TrendingUp, BarChart3, Activity, Calendar, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -34,6 +34,7 @@ interface BrowserHistoryChartsProps {
   };
 }
 
+// Add status indicator component for better user feedback
 // Enhanced component with comprehensive debugging and fallbacks
 export default function BrowserHistoryCharts({ analytics: propAnalytics }: BrowserHistoryChartsProps) {
   const { getPageData } = useDataStore();
@@ -41,6 +42,27 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   const deviceData = getPageData('deviceInfo'); // Get device info data
   const { loadPageDataFromDB } = useDataStore();
   
+  // Add processing status state for better UX
+  const [processingStatus, setProcessingStatus] = React.useState<{
+    stage: 'loading' | 'parsing' | 'analyzing' | 'complete' | 'error'
+    message: string
+    details?: string
+  }>({
+    stage: 'loading',
+    message: 'Initializing...'
+  })
+
+  // Status indicator component
+  const StatusIndicator = ({ stage, message, details }: typeof processingStatus) => (
+    <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+      <Info className="h-4 w-4 text-blue-600" />
+      <div className="text-sm text-blue-700 dark:text-blue-300">
+        <div className="font-medium">{message}</div>
+        {details && <div className="text-xs mt-1">{details}</div>}
+      </div>
+    </div>
+  )
+
   console.log('🔍 === BROWSER HISTORY CHARTS DEBUG ===');
   console.log('🔍 === ENHANCED CHART COMPONENT INITIALIZATION ===');
   console.log('🔍 Raw data from store:', {
@@ -83,6 +105,12 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   // Load data from IndexedDB if we only have metadata
   React.useEffect(() => {
     const loadFullData = async () => {
+      setProcessingStatus({
+        stage: 'loading',
+        message: 'Loading data from storage...',
+        details: 'Checking IndexedDB for cached data'
+      })
+      
       if (data && !data.data && (data as any)._hasDataInIndexedDB) {
         console.log('🔄 Loading full data from IndexedDB for browser history...');
         await loadPageDataFromDB('browserHistory');
@@ -91,6 +119,11 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         console.log('🔄 Loading full device data from IndexedDB...');
         await loadPageDataFromDB('deviceInfo');
       }
+      
+      setProcessingStatus({
+        stage: 'parsing',
+        message: 'Data loaded, preparing for analysis...'
+      })
     };
     
     loadFullData();
@@ -100,6 +133,10 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   const analytics = useMemo(() => {
     if (propAnalytics) {
       console.log('🔍 Using prop analytics:', propAnalytics);
+      setProcessingStatus({
+        stage: 'complete',
+        message: 'Using provided analytics data'
+      })
       return propAnalytics;
     }
     
@@ -107,6 +144,11 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       console.log('🔍 === ENHANCED ANALYSIS PIPELINE ===');
       console.log('🔍 === STARTING BROWSER HISTORY ANALYSIS ===');
       console.log('🔍 Processing data for analysis...');
+      setProcessingStatus({
+        stage: 'analyzing',
+        message: 'Analyzing browser history data...',
+        details: 'Processing visits, domains, and usage patterns'
+      })
       console.log('📊 Raw data passed to analyzer:', {
         type: typeof data.data,
         isArray: Array.isArray(data.data),
@@ -115,6 +157,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       });
       
       try {
+      // Add progress tracking during analysis
       const analyzer = new BrowserHistoryAnalyzer(data.data);
       const result = analyzer.analyze();
       
@@ -150,10 +193,21 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         console.log('❌ No hourly activity data generated');
       }
       
+      setProcessingStatus({
+        stage: 'complete',
+        message: 'Analysis complete!',
+        details: `Found ${result.totalStats?.totalVisits || 0} visits across ${result.totalStats?.totalSites || 0} sites`
+      })
+      
       return result;
       } catch (error) {
         console.error('❌ Error during analysis:', error);
         console.error('❌ Data that caused error:', data.data);
+        setProcessingStatus({
+          stage: 'error',
+          message: 'Analysis failed',
+          details: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
         return null;
       }
       
@@ -165,6 +219,11 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       dataType: data?.type,
       dataSize: data?.size 
     });
+    setProcessingStatus({
+      stage: 'error',
+      message: 'No data available for analysis',
+      details: 'Please upload browser history data to continue'
+    })
     return null;
   }, [propAnalytics, data]);
 
@@ -172,6 +231,8 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   // Show loading state while data is being loaded from IndexedDB
   if (data && !data.data && (data as any)._hasDataInIndexedDB) {
     return (
+      <div className="space-y-4">
+        <StatusIndicator {...processingStatus} />
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center">
@@ -183,6 +244,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           </div>
         </CardContent>
       </Card>
+      </div>
     );
   }
   
@@ -203,6 +265,8 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   // Enhanced error state handling
   if (!analytics) {
     return (
+      <div className="space-y-4">
+        <StatusIndicator {...processingStatus} />
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center">
@@ -214,6 +278,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           </div>
         </CardContent>
       </Card>
+      </div>
     );
   }
 
@@ -223,6 +288,15 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   if (!hasValidData) {
     return (
       <div className="space-y-6">
+        {/* Add success indicator for data loading */}
+        <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <div className="text-sm text-yellow-700 dark:text-yellow-300">
+            <div className="font-medium">Data processed but no valid browser history found</div>
+            <div className="text-xs mt-1">The file was parsed successfully but doesn't contain recognizable browser history data</div>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -310,6 +384,15 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   // Enhanced chart rendering with better validation
   return (
     <div className="space-y-6">
+      {/* Add success status indicator */}
+      <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <div className="text-sm text-green-700 dark:text-green-300">
+          <div className="font-medium">Browser history analysis complete</div>
+          <div className="text-xs mt-1">Successfully analyzed {analytics.totalStats.totalVisits.toLocaleString()} visits from {analytics.totalStats.totalSites.toLocaleString()} unique sites</div>
+        </div>
+      </div>
+      
       {/* Overview KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
