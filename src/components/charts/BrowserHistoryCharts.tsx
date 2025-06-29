@@ -39,12 +39,40 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   const deviceData = getPageData('deviceInfo'); // Get device info data
   const { loadPageDataFromDB } = useDataStore();
   
-  console.log('🔍 BrowserHistoryCharts: Data state check:', {
+  console.log('🔍 === BROWSER HISTORY CHARTS DEBUG ===');
+  console.log('🔍 Raw data from store:', {
     browserData: data ? 'Present' : 'Missing',
     deviceData: deviceData ? 'Present' : 'Missing',
     browserDataHasData: data?.data ? 'Yes' : 'No',
-    deviceDataHasData: deviceData?.data ? 'Yes' : 'No'
+    deviceDataHasData: deviceData?.data ? 'Yes' : 'No',
+    browserDataType: data?.type,
+    browserDataSize: data?.size,
+    browserDataRecords: data?.metadata?.totalRecords,
+    browserDataStructure: data?.metadata?.fileStructure?.slice(0, 5)
   });
+  
+  // Log the actual data structure being passed to analyzer
+  if (data?.data) {
+    console.log('🔍 Actual browser data structure:', {
+      dataType: typeof data.data,
+      isArray: Array.isArray(data.data),
+      dataKeys: typeof data.data === 'object' ? Object.keys(data.data) : 'not object',
+      dataLength: Array.isArray(data.data) ? data.data.length : 'not array',
+      sampleData: Array.isArray(data.data) ? data.data[0] : data.data
+    });
+    
+    // Check for nested structures
+    if (typeof data.data === 'object' && !Array.isArray(data.data)) {
+      Object.entries(data.data).forEach(([key, value]) => {
+        console.log(`🔍   ${key}:`, {
+          type: typeof value,
+          isArray: Array.isArray(value),
+          length: Array.isArray(value) ? value.length : 'not array',
+          sample: Array.isArray(value) && value.length > 0 ? value[0] : value
+        });
+      });
+    }
+  }
   
   // Load data from IndexedDB if we only have metadata
   React.useEffect(() => {
@@ -64,27 +92,62 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
   const analytics = useMemo(() => {
     if (propAnalytics) {
+      console.log('🔍 Using prop analytics:', propAnalytics);
       return propAnalytics;
     }
     
     if (data && data.data) {
-      console.log('🔍 BrowserHistoryCharts: Processing data for analysis...')
-      console.log('📊 Data structure:', data.data)
-      console.log('📊 Data type:', typeof data.data)
-      console.log('📊 Data keys:', Object.keys(data.data || {}))
+      console.log('🔍 === STARTING BROWSER HISTORY ANALYSIS ===');
+      console.log('🔍 Processing data for analysis...');
+      console.log('📊 Raw data passed to analyzer:', {
+        type: typeof data.data,
+        isArray: Array.isArray(data.data),
+        keys: typeof data.data === 'object' ? Object.keys(data.data) : 'not object',
+        length: Array.isArray(data.data) ? data.data.length : 'not array'
+      });
       
       const analyzer = new BrowserHistoryAnalyzer(data.data);
       const result = analyzer.analyze();
-      console.log('✅ Analysis result:', result)
-      console.log('📈 Top sites count:', result.topSites?.length || 0)
-      console.log('🌐 Top domains count:', result.topDomains?.length || 0)
-      console.log('📊 Daily activity count:', result.dailyActivity?.length || 0)
-      console.log('📊 Hourly activity sample:', result.hourlyActivity?.slice(0, 3) || [])
-      console.log('📊 Sample daily activity:', result.dailyActivity?.slice(0, 3) || [])
+      
+      console.log('✅ === ANALYSIS RESULT SUMMARY ===');
+      console.log('📈 Analysis completed with results:', {
+        topSitesCount: result.topSites?.length || 0,
+        topDomainsCount: result.topDomains?.length || 0,
+        dailyActivityCount: result.dailyActivity?.length || 0,
+        hourlyActivityCount: result.hourlyActivity?.length || 0,
+        weeklyPatternCount: result.weeklyPattern?.length || 0,
+        totalVisits: result.totalStats?.totalVisits || 0,
+        totalSites: result.totalStats?.totalSites || 0
+      });
+      
+      // Log sample data for charts
+      if (result.dailyActivity && result.dailyActivity.length > 0) {
+        console.log('📊 Sample daily activity for charts:', result.dailyActivity.slice(0, 3));
+        console.log('📊 Daily activity date range:', {
+          first: result.dailyActivity[0]?.date,
+          last: result.dailyActivity[result.dailyActivity.length - 1]?.date,
+          validEntries: result.dailyActivity.filter(d => d.date && d.visits > 0).length
+        });
+      } else {
+        console.log('❌ No daily activity data generated');
+      }
+      
+      if (result.hourlyActivity && result.hourlyActivity.length > 0) {
+        console.log('📊 Sample hourly activity for charts:', result.hourlyActivity.filter(h => h.visits > 0).slice(0, 3));
+        console.log('📊 Total hourly visits:', result.hourlyActivity.reduce((sum, h) => sum + h.visits, 0));
+      } else {
+        console.log('❌ No hourly activity data generated');
+      }
+      
       return result;
     }
     
-    console.log('⚠️ No data available for analysis:', { hasData: !!data, hasDataProperty: !!(data?.data) });
+    console.log('❌ No data available for analysis:', { 
+      hasData: !!data, 
+      hasDataProperty: !!(data?.data),
+      dataType: data?.type,
+      dataSize: data?.size 
+    });
     return null;
   }, [propAnalytics, data]);
 

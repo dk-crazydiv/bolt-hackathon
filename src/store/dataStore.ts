@@ -48,7 +48,17 @@ export const useDataStore = create<DataState>()(
 
       // Actions
       setPageData: async (page, data) => {
-        console.log(`Setting data for page ${page}:`, data?.metadata?.totalRecords, 'records')
+        console.log(`🔍 === SETTING DATA FOR PAGE ${page.toUpperCase()} ===`);
+        console.log(`🔍 Data summary:`, {
+          hasData: !!data,
+          type: data?.type,
+          fileName: data?.fileName,
+          size: data?.size,
+          totalRecords: data?.metadata?.totalRecords,
+          dataStructure: data?.data ? typeof data.data : 'no data',
+          isDataArray: Array.isArray(data?.data),
+          dataKeys: data?.data && typeof data.data === 'object' ? Object.keys(data.data) : 'not object'
+        });
         
         // Store in IndexedDB
         try {
@@ -65,7 +75,14 @@ export const useDataStore = create<DataState>()(
 
       getPageData: (page) => {
         const state = get()
-        return state[`${page}Data` as keyof DataState] as ParsedData | null
+        const data = state[`${page}Data` as keyof DataState] as ParsedData | null
+        console.log(`🔍 Getting data for page ${page}:`, {
+          hasData: !!data,
+          type: data?.type,
+          hasActualData: !!(data?.data),
+          hasIndexedDBFlag: !!(data as any)?._hasDataInIndexedDB
+        });
+        return data
       },
 
       clearPageData: async (page) => {

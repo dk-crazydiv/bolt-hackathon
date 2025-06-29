@@ -102,7 +102,21 @@ class JsonStreamParser {
   }
 
   private extractDataForProcessing(data: any): any {
-    console.log('🔍 Extracting data for processing from:', typeof data, Array.isArray(data))
+    console.log('🔍 === EXTRACTING DATA FOR PROCESSING ===');
+    console.log('🔍 Input data type:', typeof data, 'isArray:', Array.isArray(data));
+    
+    // Log the complete structure we're working with
+    if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+      console.log('🔍 Object keys found:', Object.keys(data));
+      Object.entries(data).forEach(([key, value]) => {
+        console.log(`🔍   ${key}:`, {
+          type: typeof value,
+          isArray: Array.isArray(value),
+          length: Array.isArray(value) ? value.length : 'not array',
+          hasNestedKeys: typeof value === 'object' && value !== null && !Array.isArray(value) ? Object.keys(value) : 'not object'
+        });
+      });
+    }
     
     if (Array.isArray(data)) {
       console.log('✅ Data is already an array, returning as-is')
@@ -214,12 +228,13 @@ class JsonStreamParser {
       return data
     }
     
-    console.log('⚠️ Data is primitive, returning as-is')
+    console.log('⚠️ Data is primitive type, returning as-is:', typeof data)
     return data
   }
 
   private countRecords(data: any): number {
-    console.log('📊 Counting records in data:', typeof data, Array.isArray(data))
+    console.log('📊 === COUNTING RECORDS ===');
+    console.log('📊 Input data type:', typeof data, 'isArray:', Array.isArray(data));
     
     if (Array.isArray(data)) {
       console.log('✅ Data is array, count:', data.length)
@@ -300,10 +315,13 @@ class JsonStreamParser {
       console.log('📊 Total recursive count:', totalCount)
       
       // If no arrays found, treat as single record
-      return totalCount > 0 ? totalCount : 1
+      const finalCount = totalCount > 0 ? totalCount : 1
+      console.log('📊 Final record count:', finalCount)
+      return finalCount
     }
     
     // Primitive value
+    console.log('📊 Primitive value, count: 1')
     return 1
   }
 
