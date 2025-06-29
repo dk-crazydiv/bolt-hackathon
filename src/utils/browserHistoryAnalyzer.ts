@@ -658,12 +658,13 @@ export class BrowserHistoryAnalyzer {
     const hourlyActivity = Array.from({ length: 24 }, (_, hour) => {
       const stats = hourlyMap.get(hour) || { visits: 0, totalDuration: 0 }
       return {
-        console.log('📊 Generated hourly activity:', hourlyActivity.filter(h => h.visits > 0).length, 'active hours');
         hour,
         visits: stats.visits,
         avgDuration: stats.visits > 0 ? stats.totalDuration / stats.visits : 0
       }
     })
+    
+    console.log('📊 Generated hourly activity:', hourlyActivity.filter(h => h.visits > 0).length, 'active hours');
 
     // Weekly pattern
     console.log('📊 Generating weekly pattern...');
