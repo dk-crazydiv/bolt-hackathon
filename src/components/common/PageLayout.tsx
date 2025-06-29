@@ -321,36 +321,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           showUpload ? "opacity-100 transform translate-y-0" : "opacity-100 transform translate-y-0",
           isTransitioning && !showUpload && "opacity-0 transform translate-y-4"
         )}>
-          {/* No data state - show click to upload message - only when NOT in upload mode */}
-          {!hasAnyData && !showUpload && (
-            <Card 
-              className={cn(
-                "border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg",
-                isTransitioning && "opacity-50 transform scale-95"
-              )}
-              onClick={handleShowUpload}
-            >
-              <CardContent className="flex items-center justify-center py-12 text-center">
-                <div>
-                  <Database className="h-12 w-12 text-primary mx-auto mb-4 transition-transform duration-300 hover:scale-110" />
-                  <CardTitle className="mb-2 text-primary">No data uploaded</CardTitle>
-                  <CardDescription className="mb-4">
-                    Click here to upload your {title.toLowerCase()} data and start exploring insights
-                  </CardDescription>
-                  <Badge variant="outline" className="text-primary border-primary">
-                    Click to upload
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Show formats and examples only when in upload mode and no data exists */}
-          {/* Show upload interface when showUpload is true */}
-          {showUpload && (
+          {/* Show upload interface directly when no data exists or when showUpload is true */}
+          {(!hasAnyData || showUpload) && (
             <div className={cn(
               "transition-all duration-500 ease-in-out",
-              showUpload ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
+              (!hasAnyData || showUpload) ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
             )}>
               <DropZone 
                 pageId={pageId}
