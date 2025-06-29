@@ -591,6 +591,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
+              <CardHeader>
                 {/* Enhanced daily activity chart */}
                 <CardTitle>📈 Recent Daily Activity</CardTitle>
                 <CardDescription>Your browsing activity over the last 30 days</CardDescription>
