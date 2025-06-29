@@ -1,6 +1,7 @@
 import * as Comlink from 'comlink'
 import oboe from 'oboe'
 
+// Add more comprehensive data extraction patterns
 interface ParseOptions {
   file: File
   chunkSize?: number
@@ -26,6 +27,7 @@ class JsonStreamParser {
           const data = JSON.parse(text)
           console.log('🔍 Parsed JSON structure:', Object.keys(data || {}))
           
+          // More robust data extraction
           // Extract actual data for processing
           const extractedData = this.extractDataForProcessing(data)
           console.log('📊 Extracted data for processing:', {
@@ -102,6 +104,7 @@ class JsonStreamParser {
   }
 
   private extractDataForProcessing(data: any): any {
+    console.log('🔍 === COMPREHENSIVE DATA EXTRACTION ===');
     console.log('🔍 === EXTRACTING DATA FOR PROCESSING ===');
     console.log('🔍 Input data type:', typeof data, 'isArray:', Array.isArray(data));
     
@@ -121,6 +124,7 @@ class JsonStreamParser {
     if (Array.isArray(data)) {
       console.log('✅ Data is already an array, returning as-is')
       return data
+      
     }
     
     if (typeof data === 'object' && data !== null) {
@@ -135,6 +139,7 @@ class JsonStreamParser {
         }
       }
       
+      // Enhanced browser history detection patterns
       // Special handling for Browser History structure
       if (data["Browser History"]) {
         console.log('🌐 Found Browser History key')
@@ -157,6 +162,7 @@ class JsonStreamParser {
         }
       }
       
+      // More comprehensive key patterns for browser data
       // Check for common browser history patterns
       const possibleKeys = [
         'visits', 'history', 'browsing_history', 'browser_history',
@@ -164,6 +170,7 @@ class JsonStreamParser {
         'History', 'Visits', 'BrowsingHistory', 'Device Info', 'deviceInfo', 'devices'
       ]
       
+      // Add Chrome-specific patterns
       for (const key of possibleKeys) {
         if (data[key] && Array.isArray(data[key]) && data[key].length > 0) {
           console.log(`✅ Found array at key "${key}", returning it`)
@@ -171,6 +178,7 @@ class JsonStreamParser {
         }
       }
       
+      // Enhanced nested structure search
       // Look for nested structures
       for (const [key, value] of Object.entries(data)) {
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
@@ -183,6 +191,7 @@ class JsonStreamParser {
         }
       }
       
+      // Deep search with better heuristics
       // Deep search for any meaningful array
       const findLargestArray = (obj: any, path: string = ''): { array: any[], path: string } | null => {
         let largestArray: { array: any[], path: string } | null = null
@@ -191,6 +200,7 @@ class JsonStreamParser {
           // Check if this looks like browser history data
           const sample = obj[0]
           if (typeof sample === 'object' && sample !== null) {
+            // Enhanced browser history detection
             const hasUrlLike = sample.url || sample.URL || sample.uri || sample.href || sample.link
             const hasTimeLike = sample.time_usec || sample.last_visit_time || sample.visit_time || 
                                sample.visitTime || sample.timestamp || sample.time || sample.date
@@ -233,6 +243,7 @@ class JsonStreamParser {
   }
 
   private countRecords(data: any): number {
+    console.log('📊 === ENHANCED RECORD COUNTING ===');
     console.log('📊 === COUNTING RECORDS ===');
     console.log('📊 Input data type:', typeof data, 'isArray:', Array.isArray(data));
     
@@ -243,6 +254,7 @@ class JsonStreamParser {
     
     if (typeof data === 'object' && data !== null) {
       let totalCount = 0
+      
       
       // Special handling for Browser History structure
       if (data["Browser History"]) {
@@ -270,6 +282,7 @@ class JsonStreamParser {
         }
       }
       
+      // Enhanced counting for common patterns
       // Check for common browser history patterns
       const possibleKeys = [
         'visits', 'history', 'browsing_history', 'browser_history',
@@ -289,6 +302,7 @@ class JsonStreamParser {
         return totalCount
       }
       
+      // Recursive counting with better logic
       // General approach: count all arrays in the object
       const countArraysRecursively = (obj: any): number => {
         let count = 0
@@ -326,6 +340,7 @@ class JsonStreamParser {
   }
 
   private getFileStructure(data: any): string[] {
+    // Enhanced structure detection
     if (Array.isArray(data)) {
       return data.length > 0 ? Object.keys(data[0] || {}) : []
     } else if (typeof data === 'object' && data !== null) {
@@ -355,6 +370,7 @@ class JsonStreamParser {
   }
 
   private inferDataTypes(obj: any): Record<string, string> {
+    // Better type inference
     if (Array.isArray(obj)) {
       return obj.length > 0 ? this.inferDataTypes(obj[0]) : {}
     }

@@ -1,3 +1,4 @@
+// Enhanced browser history charts with better error handling and debugging
 import React, { useMemo } from 'react';
 import { useDataStore } from '../../store/dataStore';
 import { BrowserHistoryAnalyzer } from '../../utils/browserHistoryAnalyzer';
@@ -33,6 +34,7 @@ interface BrowserHistoryChartsProps {
   };
 }
 
+// Enhanced component with comprehensive debugging and fallbacks
 export default function BrowserHistoryCharts({ analytics: propAnalytics }: BrowserHistoryChartsProps) {
   const { getPageData } = useDataStore();
   const data = getPageData('browserHistory');
@@ -40,6 +42,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   const { loadPageDataFromDB } = useDataStore();
   
   console.log('🔍 === BROWSER HISTORY CHARTS DEBUG ===');
+  console.log('🔍 === ENHANCED CHART COMPONENT INITIALIZATION ===');
   console.log('🔍 Raw data from store:', {
     browserData: data ? 'Present' : 'Missing',
     deviceData: deviceData ? 'Present' : 'Missing',
@@ -52,6 +55,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
   });
   
   // Log the actual data structure being passed to analyzer
+  console.log('🔍 === DETAILED DATA STRUCTURE ANALYSIS ===');
   if (data?.data) {
     console.log('🔍 Actual browser data structure:', {
       dataType: typeof data.data,
@@ -61,6 +65,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       sampleData: Array.isArray(data.data) ? data.data[0] : data.data
     });
     
+    // Enhanced nested structure logging
     // Check for nested structures
     if (typeof data.data === 'object' && !Array.isArray(data.data)) {
       Object.entries(data.data).forEach(([key, value]) => {
@@ -74,6 +79,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     }
   }
   
+  // Enhanced data loading from IndexedDB
   // Load data from IndexedDB if we only have metadata
   React.useEffect(() => {
     const loadFullData = async () => {
@@ -90,6 +96,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     loadFullData();
   }, [data, deviceData, loadPageDataFromDB]);
 
+  // Enhanced analytics processing with better error handling
   const analytics = useMemo(() => {
     if (propAnalytics) {
       console.log('🔍 Using prop analytics:', propAnalytics);
@@ -97,6 +104,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     }
     
     if (data && data.data) {
+      console.log('🔍 === ENHANCED ANALYSIS PIPELINE ===');
       console.log('🔍 === STARTING BROWSER HISTORY ANALYSIS ===');
       console.log('🔍 Processing data for analysis...');
       console.log('📊 Raw data passed to analyzer:', {
@@ -106,8 +114,10 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         length: Array.isArray(data.data) ? data.data.length : 'not array'
       });
       
+      try {
       const analyzer = new BrowserHistoryAnalyzer(data.data);
       const result = analyzer.analyze();
+      
       
       console.log('✅ === ANALYSIS RESULT SUMMARY ===');
       console.log('📈 Analysis completed with results:', {
@@ -120,6 +130,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         totalSites: result.totalStats?.totalSites || 0
       });
       
+      // Enhanced chart data validation
       // Log sample data for charts
       if (result.dailyActivity && result.dailyActivity.length > 0) {
         console.log('📊 Sample daily activity for charts:', result.dailyActivity.slice(0, 3));
@@ -140,6 +151,12 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       }
       
       return result;
+      } catch (error) {
+        console.error('❌ Error during analysis:', error);
+        console.error('❌ Data that caused error:', data.data);
+        return null;
+      }
+      
     }
     
     console.log('❌ No data available for analysis:', { 
@@ -151,6 +168,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     return null;
   }, [propAnalytics, data]);
 
+  // Enhanced loading state handling
   // Show loading state while data is being loaded from IndexedDB
   if (data && !data.data && (data as any)._hasDataInIndexedDB) {
     return (
@@ -167,6 +185,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       </Card>
     );
   }
+  
   if (!data) {
     return (
       <Card>
@@ -181,6 +200,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     );
   }
 
+  // Enhanced error state handling
   if (!analytics) {
     return (
       <Card>
@@ -197,6 +217,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     );
   }
 
+  // Enhanced data validation
   const hasValidData = analytics.topSites && analytics.topSites.length > 0;
 
   if (!hasValidData) {
@@ -286,6 +307,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     );
   }
 
+  // Enhanced chart rendering with better validation
   return (
     <div className="space-y-6">
       {/* Overview KPIs */}
@@ -359,6 +381,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
         <TabsContent value="overview" className="space-y-6">
           <Card>
+            {/* Enhanced timeline chart with better data validation */}
             <CardHeader>
               <CardTitle>🕐 Browser Usage Timeline</CardTitle>
               <CardDescription>Complete timeline showing browser usage frequency over time</CardDescription>
@@ -366,6 +389,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
             <CardContent>
               {(() => {
                 console.log('🔍 Timeline Chart Debug:', {
+                  // Enhanced timeline debugging
                   hasAnalytics: !!analytics,
                   hasDailyActivity: !!(analytics?.dailyActivity),
                   dailyActivityLength: analytics?.dailyActivity?.length || 0,
@@ -373,6 +397,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   totalVisits: analytics?.totalStats?.totalVisits || 0
                 })
                 
+                // Better data validation for timeline
                 const timelineData = analytics?.dailyActivity || []
                 const hasValidTimelineData = timelineData.length > 0 && 
                   timelineData.some(item => item.date && item.visits > 0)
@@ -385,6 +410,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 return hasValidTimelineData
               })() ? (
                 <ResponsiveContainer width="100%" height={300}>
+                  {/* Enhanced timeline chart with better formatting */}
                   <AreaChart data={analytics.dailyActivity}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
@@ -427,6 +453,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
+                {/* Enhanced error state for timeline */}
                 <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                   <div className="text-center">
                     <Clock className="h-8 w-8 mx-auto mb-2" />
@@ -451,6 +478,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
+                {/* Enhanced daily activity chart */}
                 <CardTitle>📈 Recent Daily Activity</CardTitle>
                 <CardDescription>Your browsing activity over the last 30 days</CardDescription>
               </CardHeader>
@@ -458,6 +486,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 {analytics.dailyActivity && analytics.dailyActivity.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <AreaChart data={analytics.dailyActivity.slice(-30)}>
+                    {/* Better chart configuration */}
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
@@ -475,6 +504,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </AreaChart>
                 </ResponsiveContainer>
                 ) : (
+                  {/* Enhanced error state */}
                   <div className="flex items-center justify-center h-[250px] text-muted-foreground">
                     <div className="text-center">
                       <BarChart3 className="h-8 w-8 mx-auto mb-2" />
@@ -488,6 +518,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
             <Card>
               <CardHeader>
+                {/* Enhanced hourly activity chart */}
                 <CardTitle>🕐 Hourly Activity Pattern</CardTitle>
                 <CardDescription>When you browse the most</CardDescription>
               </CardHeader>
@@ -495,6 +526,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 {analytics.hourlyActivity && analytics.hourlyActivity.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={analytics.hourlyActivity}>
+                    {/* Better chart styling */}
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="hour" />
                     <YAxis />
@@ -506,6 +538,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </BarChart>
                 </ResponsiveContainer>
                 ) : (
+                  {/* Enhanced error state */}
                   <div className="flex items-center justify-center h-[250px] text-muted-foreground">
                     <div className="text-center">
                       <Clock className="h-8 w-8 mx-auto mb-2" />
@@ -519,6 +552,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
           </div>
           
           {/* Debug Information Card */}
+          {/* Enhanced debug information */}
           <Card>
             <CardHeader>
               <CardTitle>🔍 Data Debug Information</CardTitle>
@@ -526,6 +560,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {/* Better debug layout */}
                 <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded">
                   <h4 className="font-semibold mb-2">📊 Analytics Data</h4>
                   <div className="space-y-1">
@@ -537,6 +572,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </div>
                 </div>
                 
+                {/* Enhanced sample data display */}
                 <div className="p-3 bg-green-50 dark:bg-green-950 rounded">
                   <h4 className="font-semibold mb-2">📈 Sample Data</h4>
                   <div className="space-y-1 text-xs">
@@ -565,6 +601,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
         <TabsContent value="sites" className="space-y-6">
           <Card>
+            {/* Enhanced sites display */}
             <CardHeader>
               <CardTitle>🏆 Top 20 Most Visited Sites</CardTitle>
               <CardDescription>Your most frequently visited websites</CardDescription>
@@ -572,6 +609,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
             <CardContent>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {analytics.topSites.slice(0, 20).map((site, index) => (
+                  {/* Better site display formatting */}
                   <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate" title={site.title}>
@@ -601,6 +639,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         <TabsContent value="domains" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
+              {/* Enhanced domain charts */}
               <CardHeader>
                 <CardTitle>🏢 Top Domains</CardTitle>
                 <CardDescription>Most visited domains by visit count</CardDescription>
@@ -608,6 +647,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
+                    {/* Better pie chart configuration */}
                     <Pie
                       data={analytics.topDomains.slice(0, 8)}
                       cx="50%"
@@ -630,6 +670,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
             <Card>
               <CardHeader>
+                {/* Enhanced domain statistics */}
                 <CardTitle>📊 Domain Statistics</CardTitle>
                 <CardDescription>Detailed domain breakdown</CardDescription>
               </CardHeader>
@@ -637,6 +678,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {analytics.topDomains.slice(0, 15).map((domain, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                      {/* Better domain display */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{domain.domain}</p>
                         <p className="text-xs text-muted-foreground">
@@ -661,6 +703,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
         <TabsContent value="patterns" className="space-y-6">
           <Card>
+            {/* Enhanced weekly pattern chart */}
             <CardHeader>
               <CardTitle>📅 Weekly Browsing Pattern</CardTitle>
               <CardDescription>Your browsing habits by day of the week</CardDescription>
@@ -668,6 +711,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={analytics.weeklyPattern}>
+                  {/* Better weekly chart styling */}
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="day" />
                   <YAxis />
@@ -680,6 +724,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
           <Card>
             <CardHeader>
+              {/* Enhanced insights section */}
               <CardTitle>🔍 Browsing Insights</CardTitle>
               <CardDescription>Key patterns and behaviors from your browsing data</CardDescription>
             </CardHeader>
@@ -687,6 +732,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
                   <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">📊 Activity Summary</h4>
+                  {/* Better insights calculation */}
                   <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                     <li>• Total browsing sessions: {analytics.sessions.length}</li>
                     <li>• Average session length: {analytics.sessions.length > 0 ? Math.round(analytics.sessions.reduce((sum, s) => sum + s.duration, 0) / analytics.sessions.length / 60000) : 0} minutes</li>
@@ -697,6 +743,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
 
                 <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                   <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">🏆 Top Preferences</h4>
+                  {/* Enhanced preferences display */}
                   <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
                     <li>• Most visited domain: {analytics.topDomains[0]?.domain || 'None'}</li>
                     <li>• Most typed site: {analytics.totalStats.mostTypedSite}</li>
@@ -710,6 +757,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         </TabsContent>
 
         <TabsContent value="devices" className="space-y-6">
+          {/* Enhanced device charts integration */}
           <DeviceWiseBrowserCharts 
             deviceData={deviceData?.data || null} 
             browserData={data?.data} 

@@ -1,3 +1,4 @@
+// Enhanced browser history analyzer with better data handling
 import { ParsedData } from '@/types'
 
 export interface ChromeVisit {
@@ -67,6 +68,7 @@ export class BrowserHistoryAnalyzer {
   private visits: ChromeVisit[] = []
 
   constructor(data: any) {
+    console.log('🔍 === ENHANCED BROWSER HISTORY ANALYZER ===');
     console.log('🔍 BrowserHistoryAnalyzer constructor called with data:', {
       dataType: typeof data,
       isArray: Array.isArray(data),
@@ -74,6 +76,7 @@ export class BrowserHistoryAnalyzer {
       dataLength: Array.isArray(data) ? data.length : 'not array'
     })
     
+    // Enhanced structure detection
     // Special handling for Browser History structure
     if (data && data["Browser History"]) {
       console.log('🌐 Browser History structure found:', typeof data["Browser History"])
@@ -88,6 +91,7 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
+    // More robust visit parsing
     this.visits = this.parseVisits(data)
     console.log('✅ Final parsed visits count:', this.visits.length)
     if (this.visits.length > 0) {
@@ -105,6 +109,7 @@ export class BrowserHistoryAnalyzer {
   }
 
   private parseVisits(data: any): ChromeVisit[] {
+    console.log('🔍 === ENHANCED VISIT PARSING ===');
     if (!data) return []
     
     console.log('🔍 === PARSING VISITS DEBUG ===')
@@ -112,6 +117,7 @@ export class BrowserHistoryAnalyzer {
     console.log('🔍 Raw data keys:', Object.keys(data || {}))
     
     // Log a sample of the data structure without overwhelming the console
+    // Better data structure logging
     if (Array.isArray(data)) {
       console.log('🔍 Data is array with length:', data.length)
       if (data.length > 0) {
@@ -129,6 +135,7 @@ export class BrowserHistoryAnalyzer {
       })
     }
     
+    // Enhanced data structure handling
     // Handle different data structures
     let visits: any[] = []
     
@@ -136,6 +143,7 @@ export class BrowserHistoryAnalyzer {
       visits = data
     } else if (data.visits && Array.isArray(data.visits)) {
       visits = data.visits
+      console.log('🔍 Found visits in data.visits')
     } else if (data.data && Array.isArray(data.data)) {
       visits = data.data
     } else if (data["Browser History"] && Array.isArray(data["Browser History"])) {
@@ -143,6 +151,7 @@ export class BrowserHistoryAnalyzer {
     } else if (data["Browser History"] && typeof data["Browser History"] === 'object') {
       const browserHistory = data["Browser History"]
       
+      // More comprehensive nested search
       if (Array.isArray(browserHistory.visits)) {
         visits = browserHistory.visits
       } else if (Array.isArray(browserHistory.data)) {
@@ -167,6 +176,7 @@ export class BrowserHistoryAnalyzer {
       }
     } else if (typeof data === 'object' && data !== null) {
       // Handle direct object with potential nested structure
+      console.log('🔍 Searching object for visit arrays...')
       console.log('Checking object structure for visits...')
       
       // Check for common browser history patterns
@@ -175,6 +185,7 @@ export class BrowserHistoryAnalyzer {
         'urls', 'sites', 'pages', 'records', 'entries', 'items'
       ]
       
+      // Enhanced key matching
       for (const key of possibleKeys) {
         if (data[key] && Array.isArray(data[key])) {
           console.log(`Found visits array at key "${key}":`, data[key].length, 'items')
@@ -183,6 +194,7 @@ export class BrowserHistoryAnalyzer {
         }
       }
       
+      // Better nested structure search
       // If no direct array found, look for nested structures
       if (visits.length === 0) {
         for (const [key, value] of Object.entries(data)) {
@@ -199,6 +211,7 @@ export class BrowserHistoryAnalyzer {
         }
       }
     } else {
+      // Enhanced deep search algorithm
       // Deep search for visits
       const findVisits = (obj: any): any[] => {
         if (Array.isArray(obj)) return obj
@@ -224,6 +237,7 @@ export class BrowserHistoryAnalyzer {
       visits = findVisits(data)
     }
 
+    console.log('🔍 === VISIT PROCESSING AND FILTERING ===');
     console.log('🔍 Raw visits found:', visits.length)
     if (visits.length > 0) {
       console.log('🔍 Sample raw visit:', visits[0])
@@ -237,6 +251,7 @@ export class BrowserHistoryAnalyzer {
       })
     }
 
+    // Enhanced visit processing with better field mapping
     const processedVisits = visits
       .filter(visit => {
         if (!visit || typeof visit !== 'object') {
@@ -246,6 +261,7 @@ export class BrowserHistoryAnalyzer {
         return true
       })
       .map(visit => {
+        // More comprehensive time field extraction
         // Prioritize time_usec as it's the actual visit time
         const visitTime = visit.time_usec || 
                          visit.last_visit_time || 
@@ -262,6 +278,7 @@ export class BrowserHistoryAnalyzer {
                          visit.datetime ||
                          Date.now()
       
+        // Enhanced field mapping
         const processedVisit = {
           url: visit.url || visit.URL || visit.uri || visit.href || visit.link || '',
           title: visit.title || visit.Title || visit.name || visit.page_title || visit.url || '',
@@ -278,6 +295,7 @@ export class BrowserHistoryAnalyzer {
         return processedVisit
       })
       .filter(visit => {
+        // Better URL validation
         const hasValidUrl = visit.url && (
           visit.url.startsWith('http') || 
           visit.url.startsWith('www') || 
@@ -290,6 +308,7 @@ export class BrowserHistoryAnalyzer {
         return hasValidUrl
       })
     
+    console.log('🔍 === FINAL PROCESSING RESULTS ===');
     console.log('✅ Final processed visits count:', processedVisits.length)
     if (processedVisits.length > 0) {
       console.log('✅ Sample processed visit:', processedVisits[0])
@@ -306,6 +325,7 @@ export class BrowserHistoryAnalyzer {
   }
 
   private parseTimestamp(time: any): number {
+    console.log('🕐 === ENHANCED TIMESTAMP PARSING ===');
     if (typeof time === 'number') {
       // Handle Chrome timestamp (microseconds since January 1, 1601 UTC)
       if (time > 10000000000000) {
@@ -313,6 +333,7 @@ export class BrowserHistoryAnalyzer {
         // Chrome epoch: January 1, 1601 UTC to JavaScript epoch: January 1, 1970 UTC
         const CHROME_EPOCH_OFFSET = 11644473600000000; // microseconds
         const jsTimestamp = Math.floor((time - CHROME_EPOCH_OFFSET) / 1000)
+        // Validate the converted timestamp
         console.log('🕐 Chrome timestamp conversion:', {
           original: time,
           converted: jsTimestamp,
@@ -322,6 +343,7 @@ export class BrowserHistoryAnalyzer {
         return jsTimestamp
       }
       // Handle Unix timestamp in milliseconds
+      // Better timestamp validation
       if (time > 1000000000000) {
         console.log('🕐 Unix timestamp (ms):', {
           original: time,
@@ -331,6 +353,7 @@ export class BrowserHistoryAnalyzer {
         return time
       }
       // Handle Unix timestamp in seconds
+      // Enhanced second-to-millisecond conversion
       if (time > 1000000000) {
         const jsTimestamp = time * 1000
         console.log('🕐 Unix timestamp (s):', {
@@ -342,6 +365,7 @@ export class BrowserHistoryAnalyzer {
         return jsTimestamp
       }
       console.log('🕐 Small number timestamp:', {
+        // Handle edge cases better
         original: time,
         assumingMs: time,
         date: new Date(time),
@@ -350,6 +374,7 @@ export class BrowserHistoryAnalyzer {
       return time
     }
     if (typeof time === 'string') {
+      // Better string parsing
       const parsed = new Date(time).getTime()
       console.log('🕐 String timestamp:', {
         original: time,
@@ -360,6 +385,7 @@ export class BrowserHistoryAnalyzer {
       return isNaN(parsed) ? Date.now() : parsed
     }
     console.log('🕐 Fallback timestamp:', {
+      // Enhanced fallback handling
       original: time,
       type: typeof time,
       fallback: Date.now()
@@ -368,6 +394,7 @@ export class BrowserHistoryAnalyzer {
   }
 
   private extractDomain(url: string): string {
+    // Enhanced domain extraction
     if (!url || typeof url !== 'string') {
       return 'unknown'
     }
@@ -386,6 +413,7 @@ export class BrowserHistoryAnalyzer {
       const urlObj = new URL(url)
       return urlObj.hostname.replace(/^www\./, '')
     } catch {
+      // Better error handling
       return 'unknown'
     }
   }
@@ -562,6 +590,7 @@ export class BrowserHistoryAnalyzer {
   }
 
   analyze(): BrowserAnalytics {
+    console.log('🔍 === ENHANCED ANALYSIS ENGINE ===');
     console.log('🔍 === STARTING ANALYSIS ===')
     console.log('🔍 Total visits to analyze:', this.visits.length)
     
@@ -588,6 +617,7 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
+    // Enhanced sample logging
     console.log('🔍 Sample visits for analysis:', this.visits.slice(0, 2))
     console.log('🔍 Sample visit timestamps:', this.visits.slice(0, 2).map(v => ({
       url: v.url,
@@ -597,6 +627,7 @@ export class BrowserHistoryAnalyzer {
     })))
     
     // Analyze top domains
+    console.log('🔍 === ENHANCED DOMAIN ANALYSIS ===');
     console.log('🔍 Starting domain analysis...')
     const domainMap = new Map<string, DomainStats>()
     
@@ -630,6 +661,7 @@ export class BrowserHistoryAnalyzer {
     console.log('✅ Top domains analyzed:', topDomains.length, 'domains')
 
     // Analyze top sites
+    console.log('🔍 === ENHANCED SITES ANALYSIS ===');
     console.log('🔍 Starting sites analysis...')
     const siteMap = new Map<string, { url: string; title: string; visitCount: number; domain: string; typedCount: number }>()
     
@@ -652,6 +684,7 @@ export class BrowserHistoryAnalyzer {
     console.log('✅ Top sites analyzed:', topSites.length, 'sites')
 
     // Analyze sessions
+    console.log('🔍 === ENHANCED SESSION ANALYSIS ===');
     console.log('🔍 Starting session analysis...')
     const sessions = this.groupVisitsBySession(this.visits)
     console.log('✅ Sessions analyzed:', sessions.length, 'sessions')
@@ -659,6 +692,7 @@ export class BrowserHistoryAnalyzer {
     // Daily activity
     console.log('🔍 Starting daily activity analysis...')
     const dailyMap = new Map<string, { visits: number; duration: number }>()
+    let validDailyEntries = 0
     this.visits.forEach(visit => {
       if (!visit.timestamp || visit.timestamp <= 0) {
         console.log('⚠️ Invalid timestamp for visit:', {
@@ -680,6 +714,7 @@ export class BrowserHistoryAnalyzer {
       }
       
       const date = visitDate.toISOString().split('T')[0]
+      validDailyEntries++
       const existing = dailyMap.get(date) || { visits: 0, duration: 0 }
       existing.visits += visit.visitCount || 1
       existing.duration += visit.visitDuration || 0
@@ -694,6 +729,7 @@ export class BrowserHistoryAnalyzer {
         return activity.date && activity.date !== 'Invalid Date' && activity.visits > 0
       })
       
+    console.log('📊 Daily activity processing summary:', { validDailyEntries, finalEntries: dailyActivity.length });
     console.log('📊 Daily activity generated:', dailyActivity.length, 'entries')
     console.log('📊 Sample daily activity:', dailyActivity.slice(0, 5))
     console.log('📊 Daily activity date range:', {
@@ -704,6 +740,7 @@ export class BrowserHistoryAnalyzer {
 
     // Hourly activity
     console.log('🔍 Starting hourly activity analysis...')
+    let validHourlyEntries = 0
     const hourlyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
       if (!visit.timestamp || visit.timestamp <= 0) return
@@ -719,6 +756,7 @@ export class BrowserHistoryAnalyzer {
         })
         return
       }
+      validHourlyEntries++
       const existing = hourlyMap.get(hour) || { visits: 0, totalDuration: 0 }
       existing.visits += visit.visitCount || 1
       existing.totalDuration += visit.visitDuration || 0
@@ -734,6 +772,7 @@ export class BrowserHistoryAnalyzer {
       }
     })
     
+    console.log('📊 Hourly activity processing summary:', { validHourlyEntries, totalHours: 24 });
     console.log('📊 Hourly activity generated:', hourlyActivity.length, 'entries')
     console.log('📊 Sample hourly activity:', hourlyActivity.filter(h => h.visits > 0).slice(0, 5))
     console.log('📊 Total hourly visits:', hourlyActivity.reduce((sum, h) => sum + h.visits, 0))
@@ -741,6 +780,7 @@ export class BrowserHistoryAnalyzer {
     // Weekly pattern
     console.log('🔍 Starting weekly pattern analysis...')
     const weeklyMap = new Map<number, { visits: number; totalDuration: number }>()
+    let validWeeklyEntries = 0
     this.visits.forEach(visit => {
       if (!visit.timestamp || visit.timestamp <= 0) return
       const visitDate = new Date(visit.timestamp)
@@ -748,6 +788,7 @@ export class BrowserHistoryAnalyzer {
       
       const dayOfWeek = visitDate.getDay()
       if (isNaN(dayOfWeek)) return
+      validWeeklyEntries++
       const existing = weeklyMap.get(dayOfWeek) || { visits: 0, totalDuration: 0 }
       existing.visits += visit.visitCount || 1
       existing.totalDuration += visit.visitDuration || 0
@@ -764,6 +805,7 @@ export class BrowserHistoryAnalyzer {
       }
     })
     
+    console.log('📊 Weekly pattern processing summary:', { validWeeklyEntries, daysWithData: weeklyPattern.filter(w => w.visits > 0).length });
     console.log('📊 Weekly pattern generated:', weeklyPattern.filter(w => w.visits > 0))
 
     // New time-based analyses
@@ -773,6 +815,7 @@ export class BrowserHistoryAnalyzer {
     const browsingSessions = this.analyzeBrowsingSessionsOverTime()
 
     // Calculate total stats
+    console.log('🔍 === CALCULATING FINAL STATISTICS ===');
     const totalVisits = this.visits.reduce((sum, visit) => sum + (visit.visitCount || 1), 0)
     const totalSites = new Set(this.visits.map(v => v.url)).size
     const totalDomains = topDomains.length
@@ -782,6 +825,7 @@ export class BrowserHistoryAnalyzer {
       { typedCount: 0, url: 'None' }
     ).url
 
+    console.log('🔍 === COMPILING ENHANCED RESULTS ===');
     console.log('🔍 Compiling final results...')
     const result = {
       topDomains,
@@ -802,6 +846,7 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
+    console.log('✅ === ENHANCED ANALYSIS COMPLETE ===');
     console.log('✅ === ANALYSIS COMPLETE ===')
     console.log('✅ Final analysis result summary:', {
       dailyActivityCount: result.dailyActivity.length,
