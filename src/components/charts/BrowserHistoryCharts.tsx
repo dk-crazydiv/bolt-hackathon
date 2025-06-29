@@ -453,8 +453,8 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                   {/* Enhanced error state for timeline */}
+                    {/* Enhanced error state */}
                   <div className="text-center">
                     <Clock className="h-8 w-8 mx-auto mb-2" />
                     <p className="text-sm">No timeline data available</p>
@@ -538,8 +538,8 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </BarChart>
                 </ResponsiveContainer>
                 ) : (
-                  {/* Enhanced error state */}
                   <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                    {/* Enhanced error state */}
                     <div className="text-center">
                       <Clock className="h-8 w-8 mx-auto mb-2" />
                       <p className="text-sm">No hourly activity data available</p>
