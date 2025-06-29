@@ -371,12 +371,13 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">📊 Overview</TabsTrigger>
           <TabsTrigger value="sites">🌐 Top Sites</TabsTrigger>
           <TabsTrigger value="domains">🏢 Domains</TabsTrigger>
           <TabsTrigger value="patterns">📈 Patterns</TabsTrigger>
           <TabsTrigger value="devices">📱 Devices</TabsTrigger>
+          <TabsTrigger value="data-table">📋 Data Table</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -758,6 +759,146 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
             deviceData={deviceData?.data || null} 
             browserData={data?.data} 
           />
+        </TabsContent>
+
+        <TabsContent value="data-table" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>📋 Raw Data Table</CardTitle>
+              <CardDescription>
+                View all browser history data in a simple table format for debugging and analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                // Extract raw visits data for table display
+                let rawData = []
+                
+                if (data?.data) {
+                  // Try to extract visits from various data structures
+                  if (Array.isArray(data.data)) {
+                    rawData = data.data
+                  } else if (data.data["Browser History"]) {
+                    const browserHistory = data.data["Browser History"]
+                    if (Array.isArray(browserHistory)) {
+                      rawData = browserHistory
+                    } else if (typeof browserHistory === 'object') {
+                      // Look for arrays within Browser History
+                      for (const [key, value] of Object.entries(browserHistory)) {
+                        if (Array.isArray(value) && value.length > 0) {
+                          rawData = value
+                          break
+                        }
+                      }
+                    }
+                  } else if (typeof data.data === 'object') {
+                    // Look for common visit patterns
+                    const possibleKeys = ['visits', 'history', 'browsing_history', 'browser_history', 'urls', 'sites', 'pages']
+                    for (const key of possibleKeys) {
+                      if (data.data[key] && Array.isArray(data.data[key])) {
+                        rawData = data.data[key]
+                        break
+                      }
+                    }
+                  }
+                }
+
+                if (rawData.length === 0) {
+                  return (
+                    <div className="text-center py-8">
+                      <div className="text-muted-foreground">
+                        <p>No tabular data available</p>
+                        <p className="text-sm mt-2">
+                          Raw data structure: {data?.data ? typeof data.data : 'No data'}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                }
+
+                // Get all unique keys from the data for table headers
+                const allKeys = new Set<string>()
+                rawData.slice(0, 100).forEach(item => {
+                  if (typeof item === 'object' && item !== null) {
+                    Object.keys(item).forEach(key => allKeys.add(key))
+                  }
+                })
+
+                const headers = Array.from(allKeys).sort()
+                const displayData = rawData.slice(0, 100) // Limit to first 100 rows for performance
+
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Showing first {displayData.length} of {rawData.length} records
+                      </p>
+                      <Badge variant="outline">
+                        {headers.length} columns
+                      </Badge>
+                    </div>
+                    
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="overflow-x-auto max-h-96">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/50 sticky top-0">
+                            <tr>
+                              <th className="px-3 py-2 text-left font-medium border-r">#</th>
+                              {headers.map(header => (
+                                <th key={header} className="px-3 py-2 text-left font-medium border-r min-w-32">
+                                  {header}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {displayData.map((row, index) => (
+                              <tr key={index} className="border-t hover:bg-muted/30">
+                                <td className="px-3 py-2 border-r font-mono text-xs text-muted-foreground">
+                                  {index + 1}
+                                </td>
+                                {headers.map(header => {
+                                  const value = row?.[header]
+                                  let displayValue = ''
+                                  
+                                  if (value === null || value === undefined) {
+                                    displayValue = '-'
+                                  } else if (typeof value === 'object') {
+                                    displayValue = JSON.stringify(value)
+                                  } else if (typeof value === 'string' && value.length > 50) {
+                                    displayValue = value.substring(0, 50) + '...'
+                                  } else {
+                                    displayValue = String(value)
+                                  }
+                                  
+                                  return (
+                                    <td 
+                                      key={header} 
+                                      className="px-3 py-2 border-r font-mono text-xs"
+                                      title={typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                    >
+                                      {displayValue}
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    
+                    {rawData.length > 100 && (
+                      <div className="text-center py-4 text-sm text-muted-foreground">
+                        <p>Showing first 100 rows only for performance.</p>
+                        <p>Total records: {rawData.length.toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
