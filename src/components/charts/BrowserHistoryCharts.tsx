@@ -453,23 +453,22 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
+                <div className="text-center">
                   {/* Enhanced error state for timeline */}
-                    {/* Enhanced error state */}
-                  <div className="text-center">
-                    <Clock className="h-8 w-8 mx-auto mb-2" />
-                    <p className="text-sm">No timeline data available</p>
-                    <p className="text-xs">
-                      {analytics?.totalStats?.totalVisits > 0 
-                        ? 'Processing timeline data...' 
-                        : 'Upload browser history data to see usage timeline'
-                      }
+                  {/* Enhanced error state */}
+                  <Clock className="h-8 w-8 mx-auto mb-2" />
+                  <p className="text-sm">No timeline data available</p>
+                  <p className="text-xs">
+                    {analytics?.totalStats?.totalVisits > 0 
+                      ? 'Processing timeline data...' 
+                      : 'Upload browser history data to see usage timeline'
+                    }
+                  </p>
+                  {analytics?.dailyActivity && (
+                    <p className="text-xs mt-2 text-blue-600">
+                      Debug: Found {analytics.dailyActivity.length} daily entries
                     </p>
-                    {analytics?.dailyActivity && (
-                      <p className="text-xs mt-2 text-blue-600">
-                        Debug: Found {analytics.dailyActivity.length} daily entries
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -511,7 +510,8 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                       <p className="text-sm">No daily activity data available</p>
                       <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
                     </div>
-                  </div>
+                  <div className="text-center">
+                </div>
                 )}
               </CardContent>
             </Card>
