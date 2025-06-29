@@ -606,7 +606,6 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
             <CardContent>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {analytics.topSites.slice(0, 20).map((site, index) => (
-                  {/* Better site display formatting */}
                   <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate" title={site.title}>
