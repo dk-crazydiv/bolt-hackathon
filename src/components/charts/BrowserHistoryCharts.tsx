@@ -1,18 +1,20 @@
-The main issue in this file is an extra closing curly brace in the analytics useMemo hook. Here's the fix:
+The main issue in this file is an extra closing curly brace and parenthesis in the analytics useMemo hook. Here's the fix:
 
-The problematic section is around line 271 where there are two closing curly braces. Remove one of them:
+The problematic section is around line 171-172:
 
-Change from:
 ```javascript
   }, [propAnalytics, data]);
   }, [propAnalytics, data, analyzeWithTimeout]);
 ```
 
-To:
+This should be just one closing section:
+
 ```javascript
   }, [propAnalytics, data, analyzeWithTimeout]);
 ```
 
-This fixes the syntax error by properly closing the useMemo hook with a single closing curly brace. The rest of the file appears to be syntactically correct.
+The extra `}, [propAnalytics, data]);` should be removed as it's creating an invalid closure.
 
-The fixed version maintains all the functionality while resolving the bracket mismatch that was causing the syntax error.
+This error occurred because there were two dependency arrays being closed when there should only be one for the useMemo hook.
+
+The rest of the file appears structurally sound with properly matched opening and closing brackets. After removing the extra closure, the component should work as expected.
