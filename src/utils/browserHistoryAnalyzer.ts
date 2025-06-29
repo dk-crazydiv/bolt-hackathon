@@ -1,5 +1,4 @@
 import { ParsedData } from '@/types'
-import { performance } from 'perf_hooks'
 
 export interface ChromeVisit {
   // Enhanced interface to handle Chrome export format
