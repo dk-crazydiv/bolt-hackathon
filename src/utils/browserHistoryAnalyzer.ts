@@ -1,5 +1,3 @@
-import { ParsedData } from '@/types'
-
 export interface ChromeVisit {
   // Enhanced interface to handle Chrome export format
   url: string
@@ -71,7 +69,7 @@ export class BrowserHistoryAnalyzer {
   private visits: ChromeVisit[] = []
 
   constructor(data: any) {
-    const startTime = performance.now()
+    const startTime = Date.now()
     console.log('🔍 === BROWSER HISTORY ANALYZER INITIALIZATION ===');
     console.log('🔍 Input data type:', typeof data, 'isArray:', Array.isArray(data));
     console.log('🔍 Input data sample:', Array.isArray(data) ? data.slice(0, 2) : data);
@@ -88,7 +86,7 @@ export class BrowserHistoryAnalyzer {
     }
     
     this.visits = this.parseVisits(data)
-    const endTime = performance.now()
+    const endTime = Date.now()
     console.log('✅ Final parsed visits count:', this.visits.length)
     console.log('✅ Data validation result:', this.hasValidData())
     
@@ -125,7 +123,7 @@ export class BrowserHistoryAnalyzer {
 
   private parseVisits(data: any): ChromeVisit[] {
     console.log('🔍 === PARSING VISITS ===');
-    const parseStartTime = performance.now()
+    const parseStartTime = Date.now()
     if (!data) return []
     
     let visits: any[] = []
@@ -259,12 +257,6 @@ export class BrowserHistoryAnalyzer {
       .map(visit => {
         console.log('🔍 Processing visit:', { url: visit?.url, time_usec: visit?.time_usec, id: visit?.id });
         
-        // Add processing timeout check
-        const currentTime = performance.now()
-        if (currentTime - parseStartTime > 30000) { // 30 second timeout
-          throw new Error('Processing timeout - dataset too large or complex')
-        }
-        
         // Extract time with priority order for Chrome data
         const visitTime = visit.time_usec || 
                          visit.last_visit_time || 
@@ -331,7 +323,7 @@ export class BrowserHistoryAnalyzer {
         return true
       })
     
-    console.log(`⏱️ Parsing took ${performance.now() - parseStartTime}ms`)
+    console.log(`⏱️ Parsing took ${Date.now() - parseStartTime}ms`)
     console.log('✅ Final processed visits count:', processedVisits.length);
     console.log('✅ Sample processed visit:', processedVisits[0]);
     return processedVisits
@@ -571,7 +563,7 @@ export class BrowserHistoryAnalyzer {
 
   analyze(): BrowserAnalytics {
     console.log('🔍 === STARTING ANALYSIS ===');
-    const analysisStartTime = performance.now()
+    const analysisStartTime = Date.now()
     
     // Add early validation with detailed logging
     if (!this.hasValidData()) {
@@ -765,7 +757,7 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
-    console.log(`⏱️ Total analysis took ${performance.now() - analysisStartTime}ms`)
+    console.log(`⏱️ Total analysis took ${Date.now() - analysisStartTime}ms`)
     console.log('📊 Final analysis stats:', { totalVisits, totalSites, totalDomains });
     console.log('✅ Analysis complete:', {
       dailyActivityCount: result.dailyActivity.length,

@@ -1,7 +1,4 @@
-import React, { useMemo } from 'react';
-import { useDataStore } from '../../store/dataStore';
-import { BrowserHistoryAnalyzer } from '../../utils/browserHistoryAnalyzer';
-import { DeviceWiseBrowserCharts } from './DeviceWiseBrowserCharts';
+import React, { useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -20,6 +17,9 @@ import {
   BarChart,
   Bar
 } from 'recharts';
+import { useDataStore } from '../../store/dataStore';
+import { BrowserHistoryAnalyzer } from '../../utils/browserHistoryAnalyzer';
+import { DeviceWiseBrowserCharts } from './DeviceWiseBrowserCharts';
 
 const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
 
@@ -121,6 +121,30 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     loadFullData();
   }, [data, deviceData, loadPageDataFromDB]);
 
+  // Add timeout protection for analysis
+  const analyzeWithTimeout = useCallback((data: any) => {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Analysis timeout - dataset too large or complex'))
+      }, 30000) // 30 second timeout
+      
+      try {
+        const analyzer = new BrowserHistoryAnalyzer(data)
+        if (!analyzer.hasValidData()) {
+          clearTimeout(timeout)
+          resolve(null)
+          return
+        }
+        const result = analyzer.analyze()
+        clearTimeout(timeout)
+        resolve(result)
+      } catch (error) {
+        clearTimeout(timeout)
+        reject(error)
+      }
+    })
+  }, [])
+
   const analytics = useMemo(() => {
     if (propAnalytics) {
       console.log('🔍 Using prop analytics:', propAnalytics);
@@ -164,69 +188,71 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
       
       try {
         console.log('🔍 Creating BrowserHistoryAnalyzer...');
-      const analyzer = new BrowserHistoryAnalyzer(data.data);
+        
+        // Use timeout-protected analysis
+        analyzeWithTimeout(data.data).then((result) => {
+          if (!result) {
+            console.log('❌ Analyzer found no valid data');
+            setProcessingStatus({
+              stage: 'error',
+              message: 'No valid browser history found',
+              details: 'The data was parsed but contains no recognizable browser visits'
+            })
+            return null;
+          }
       
-      // Check if analyzer found valid data before running full analysis
-      if (!analyzer.hasValidData()) {
-        console.log('❌ Analyzer found no valid data');
-        setProcessingStatus({
-          stage: 'error',
-          message: 'No valid browser history found',
-          details: 'The data was parsed but contains no recognizable browser visits'
+          console.log('📈 Analysis completed with results:', {
+            topSitesCount: result.topSites?.length || 0,
+            topDomainsCount: result.topDomains?.length || 0,
+            dailyActivityCount: result.dailyActivity?.length || 0,
+            hourlyActivityCount: result.hourlyActivity?.length || 0,
+            weeklyPatternCount: result.weeklyPattern?.length || 0,
+            totalVisits: result.totalStats?.totalVisits || 0,
+            totalSites: result.totalStats?.totalSites || 0
+          });
+      
+          // Log sample data for charts
+          if (result.dailyActivity && result.dailyActivity.length > 0) {
+            console.log('📊 Sample daily activity for charts:', result.dailyActivity.slice(0, 3));
+            console.log('📊 Daily activity date range:', {
+              first: result.dailyActivity[0]?.date,
+              last: result.dailyActivity[result.dailyActivity.length - 1]?.date,
+              validEntries: result.dailyActivity.filter(d => d.date && d.visits > 0).length
+            });
+          } else {
+            console.log('❌ No daily activity data generated');
+          }
+      
+          if (result.hourlyActivity && result.hourlyActivity.length > 0) {
+            console.log('📊 Sample hourly activity for charts:', result.hourlyActivity.filter(h => h.visits > 0).slice(0, 3));
+            console.log('📊 Total hourly visits:', result.hourlyActivity.reduce((sum, h) => sum + h.visits, 0));
+          } else {
+            console.log('❌ No hourly activity data generated');
+          }
+      
+          console.log('🔍 Setting status to complete...');
+          setProcessingStatus({
+            stage: 'complete',
+            message: 'Analysis complete!',
+            details: `Found ${result.totalStats?.totalVisits || 0} visits across ${result.totalStats?.totalSites || 0} sites`
+          })
+      
+          return result;
+        }).catch((error) => {
+          console.error('❌ Error during analysis:', error);
+          setProcessingStatus({
+            stage: 'error',
+            message: 'Analysis failed',
+            details: error instanceof Error ? error.message : 'Unknown error occurred'
+          })
+          return null;
         })
-        return null;
-      }
-      
-      console.log('🔍 Running analysis...');
-      const result = analyzer.analyze();
-      
-      
-      console.log('📈 Analysis completed with results:', {
-        topSitesCount: result.topSites?.length || 0,
-        topDomainsCount: result.topDomains?.length || 0,
-        dailyActivityCount: result.dailyActivity?.length || 0,
-        hourlyActivityCount: result.hourlyActivity?.length || 0,
-        weeklyPatternCount: result.weeklyPattern?.length || 0,
-        totalVisits: result.totalStats?.totalVisits || 0,
-        totalSites: result.totalStats?.totalSites || 0
-      });
-      
-      // Log sample data for charts
-      if (result.dailyActivity && result.dailyActivity.length > 0) {
-        console.log('📊 Sample daily activity for charts:', result.dailyActivity.slice(0, 3));
-        console.log('📊 Daily activity date range:', {
-          first: result.dailyActivity[0]?.date,
-          last: result.dailyActivity[result.dailyActivity.length - 1]?.date,
-          validEntries: result.dailyActivity.filter(d => d.date && d.visits > 0).length
-        });
-      } else {
-        console.log('❌ No daily activity data generated');
-      }
-      
-      if (result.hourlyActivity && result.hourlyActivity.length > 0) {
-        console.log('📊 Sample hourly activity for charts:', result.hourlyActivity.filter(h => h.visits > 0).slice(0, 3));
-        console.log('📊 Total hourly visits:', result.hourlyActivity.reduce((sum, h) => sum + h.visits, 0));
-      } else {
-        console.log('❌ No hourly activity data generated');
-      }
-      
-      console.log('🔍 Setting status to complete...');
-      setProcessingStatus({
-        stage: 'complete',
-        message: 'Analysis complete!',
-        details: `Found ${result.totalStats?.totalVisits || 0} visits across ${result.totalStats?.totalSites || 0} sites`
-      })
-      
-      return result;
+        
+        // Return a promise that will resolve with the result
+        return analyzeWithTimeout(data.data);
+        
       } catch (error) {
         console.error('❌ Error during analysis:', error);
-        
-        // Add specific error handling for timeout
-        if (error instanceof Error && error.message.includes('timeout')) {
-          console.error('❌ Analysis timed out - dataset may be too large');
-        }
-        console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-        console.error('❌ Data that caused error:', data.data);
         setProcessingStatus({
           stage: 'error',
           message: 'Analysis failed',
@@ -251,6 +277,7 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
     })
     return null;
   }, [propAnalytics, data]);
+  }, [propAnalytics, data, analyzeWithTimeout]);
 
   // Add effect to monitor analytics changes
   React.useEffect(() => {
