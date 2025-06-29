@@ -67,41 +67,67 @@ export class BrowserHistoryAnalyzer {
   private visits: ChromeVisit[] = []
 
   constructor(data: any) {
-    console.log('Raw data keys:', Object.keys(data || {}))
+    console.log('🔍 BrowserHistoryAnalyzer constructor called with data:', {
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      dataKeys: data ? Object.keys(data) : 'null',
+      dataLength: Array.isArray(data) ? data.length : 'not array'
+    })
     
     // Special handling for Browser History structure
     if (data && data["Browser History"]) {
-      console.log('Browser History structure:', typeof data["Browser History"])
+      console.log('🌐 Browser History structure found:', typeof data["Browser History"])
       if (typeof data["Browser History"] === 'object' && !Array.isArray(data["Browser History"])) {
-        console.log('Browser History nested structure detected')
+        console.log('🌐 Browser History nested structure detected')
         for (const [key, value] of Object.entries(data["Browser History"])) {
-          console.log(`  ${key}:`, Array.isArray(value) ? `Array[${value.length}]` : typeof value)
+          console.log(`🌐   ${key}:`, Array.isArray(value) ? `Array[${value.length}]` : typeof value)
           if (Array.isArray(value) && value.length > 0) {
-            console.log(`    Sample item from ${key}:`, value[0])
+            console.log(`🌐     Sample item from ${key}:`, value[0])
           }
         }
       }
     }
     
     this.visits = this.parseVisits(data)
-    console.log('Parsed visits count:', this.visits.length)
+    console.log('✅ Final parsed visits count:', this.visits.length)
     if (this.visits.length > 0) {
-      console.log('Sample visit with timestamp:', {
+      console.log('✅ Sample visit with timestamp:', {
         url: this.visits[0].url,
+        title: this.visits[0].title,
         timestamp: this.visits[0].timestamp,
-        originalTime: this.visits[0].time_usec || this.visits[0].last_visit_time,
-        parsedDate: new Date(this.visits[0].timestamp || 0)
+        originalTime: this.visits[0].time_usec || this.visits[0].last_visit_time || this.visits[0].visitTime,
+        parsedDate: new Date(this.visits[0].timestamp || 0),
+        isValidDate: !isNaN(new Date(this.visits[0].timestamp || 0).getTime())
       })
+    } else {
+      console.log('❌ No visits were parsed from the data!')
     }
   }
 
   private parseVisits(data: any): ChromeVisit[] {
     if (!data) return []
     
-    console.log('=== PARSING VISITS DEBUG ===')
-    console.log('Raw data type:', typeof data)
-    console.log('Raw data keys:', Object.keys(data || {}))
-    console.log('Raw data structure:', data)
+    console.log('🔍 === PARSING VISITS DEBUG ===')
+    console.log('🔍 Raw data type:', typeof data)
+    console.log('🔍 Raw data keys:', Object.keys(data || {}))
+    
+    // Log a sample of the data structure without overwhelming the console
+    if (Array.isArray(data)) {
+      console.log('🔍 Data is array with length:', data.length)
+      if (data.length > 0) {
+        console.log('🔍 Sample array item:', data[0])
+      }
+    } else if (typeof data === 'object' && data !== null) {
+      console.log('🔍 Data is object with keys:', Object.keys(data))
+      // Show first few entries of each key
+      Object.entries(data).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          console.log(`🔍   ${key}: Array[${value.length}]`, value.length > 0 ? value[0] : 'empty')
+        } else {
+          console.log(`🔍   ${key}:`, typeof value, Array.isArray(value) ? `Array[${value.length}]` : '')
+        }
+      })
+    }
     
     // Handle different data structures
     let visits: any[] = []
@@ -198,73 +224,83 @@ export class BrowserHistoryAnalyzer {
       visits = findVisits(data)
     }
 
-    console.log('Raw visits found:', visits.length)
+    console.log('🔍 Raw visits found:', visits.length)
     if (visits.length > 0) {
-      console.log('Sample raw visit:', visits[0])
-      console.log('Time fields in sample:', {
+      console.log('🔍 Sample raw visit:', visits[0])
+      console.log('🔍 Time fields in sample:', {
         time_usec: visits[0].time_usec,
         last_visit_time: visits[0].last_visit_time,
         visit_time: visits[0].visit_time,
-        visitTime: visits[0].visitTime
+        visitTime: visits[0].visitTime,
+        timestamp: visits[0].timestamp,
+        date: visits[0].date
       })
     }
 
     const processedVisits = visits
       .filter(visit => {
         if (!visit || typeof visit !== 'object') {
-          console.log('Filtered out non-object visit:', visit)
+          console.log('⚠️ Filtered out non-object visit:', visit)
           return false
         }
         return true
       })
       .map(visit => {
-      // Prioritize time_usec as it's the actual visit time
-      const visitTime = visit.time_usec || 
-                       visit.last_visit_time || 
-                       visit.visit_time || 
-                       visit.visitTime || 
-                       visit.timestamp || 
-                       visit.time ||
-                       visit.date ||
-                       visit.lastVisitTime ||
-                       visit.last_visit ||
-                       visit.visit_date ||
-                       visit.access_time ||
-                       visit.when ||
-                       visit.datetime ||
-                       Date.now()
+        // Prioritize time_usec as it's the actual visit time
+        const visitTime = visit.time_usec || 
+                         visit.last_visit_time || 
+                         visit.visit_time || 
+                         visit.visitTime || 
+                         visit.timestamp || 
+                         visit.time ||
+                         visit.date ||
+                         visit.lastVisitTime ||
+                         visit.last_visit ||
+                         visit.visit_date ||
+                         visit.access_time ||
+                         visit.when ||
+                         visit.datetime ||
+                         Date.now()
       
-      const processedVisit = {
-        url: visit.url || visit.URL || visit.uri || visit.href || visit.link || '',
-        title: visit.title || visit.Title || visit.name || visit.page_title || visit.url || '',
-        visitTime: visitTime,
-        visitDuration: visit.visitDuration || visit.duration || 0,
-        visitCount: visit.visit_count || visit.visitCount || visit.count || 1,
-        typedCount: visit.typed_count || visit.typedCount || visit.typed || 0,
-        timestamp: this.parseTimestamp(visitTime),
-        id: visit.id,
-        hidden: visit.hidden,
-        time_usec: visit.time_usec
-      }
+        const processedVisit = {
+          url: visit.url || visit.URL || visit.uri || visit.href || visit.link || '',
+          title: visit.title || visit.Title || visit.name || visit.page_title || visit.url || '',
+          visitTime: visitTime,
+          visitDuration: visit.visitDuration || visit.duration || 0,
+          visitCount: visit.visit_count || visit.visitCount || visit.count || 1,
+          typedCount: visit.typed_count || visit.typedCount || visit.typed || 0,
+          timestamp: this.parseTimestamp(visitTime),
+          id: visit.id,
+          hidden: visit.hidden,
+          time_usec: visit.time_usec
+        }
       
-      return processedVisit
-    })
-    .filter(visit => {
-      const hasValidUrl = visit.url && (
-        visit.url.startsWith('http') || 
-        visit.url.startsWith('www') || 
-        visit.url.includes('.') ||
-        visit.url.length > 3
-      )
-      if (!hasValidUrl) {
-        console.log('Filtered out invalid URL:', visit.url)
-      }
-      return hasValidUrl
-    })
+        return processedVisit
+      })
+      .filter(visit => {
+        const hasValidUrl = visit.url && (
+          visit.url.startsWith('http') || 
+          visit.url.startsWith('www') || 
+          visit.url.includes('.') ||
+          visit.url.length > 3
+        )
+        if (!hasValidUrl) {
+          console.log('⚠️ Filtered out invalid URL:', visit.url)
+        }
+        return hasValidUrl
+      })
     
-    console.log('Final processed visits count:', processedVisits.length)
+    console.log('✅ Final processed visits count:', processedVisits.length)
     if (processedVisits.length > 0) {
-      console.log('Sample processed visit:', processedVisits[0])
+      console.log('✅ Sample processed visit:', processedVisits[0])
+      console.log('✅ Timestamp validation for sample:', {
+        originalTime: processedVisits[0].visitTime,
+        parsedTimestamp: processedVisits[0].timestamp,
+        resultingDate: new Date(processedVisits[0].timestamp),
+        isValidDate: !isNaN(new Date(processedVisits[0].timestamp).getTime())
+      })
+    } else {
+      console.log('❌ No visits passed the filtering process!')
     }
     return processedVisits
   }
@@ -526,9 +562,11 @@ export class BrowserHistoryAnalyzer {
   }
 
   analyze(): BrowserAnalytics {
-    console.log('Analyzing visits:', this.visits.length, 'visits')
+    console.log('🔍 === STARTING ANALYSIS ===')
+    console.log('🔍 Total visits to analyze:', this.visits.length)
     
     if (this.visits.length === 0) {
+      console.log('❌ No visits to analyze, returning empty analytics')
       return {
         topDomains: [],
         topSites: [],
@@ -550,8 +588,8 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
-    console.log('🔍 Sample visits for analysis:', this.visits.slice(0, 3))
-    console.log('🔍 Sample visit timestamps:', this.visits.slice(0, 3).map(v => ({
+    console.log('🔍 Sample visits for analysis:', this.visits.slice(0, 2))
+    console.log('🔍 Sample visit timestamps:', this.visits.slice(0, 2).map(v => ({
       url: v.url,
       timestamp: v.timestamp,
       date: new Date(v.timestamp || 0),
@@ -559,6 +597,7 @@ export class BrowserHistoryAnalyzer {
     })))
     
     // Analyze top domains
+    console.log('🔍 Starting domain analysis...')
     const domainMap = new Map<string, DomainStats>()
     
     this.visits.forEach(visit => {
@@ -588,8 +627,10 @@ export class BrowserHistoryAnalyzer {
     const topDomains = Array.from(domainMap.values())
       .sort((a, b) => b.visitCount - a.visitCount)
       .slice(0, 20)
+    console.log('✅ Top domains analyzed:', topDomains.length, 'domains')
 
     // Analyze top sites
+    console.log('🔍 Starting sites analysis...')
     const siteMap = new Map<string, { url: string; title: string; visitCount: number; domain: string; typedCount: number }>()
     
     this.visits.forEach(visit => {
@@ -608,11 +649,15 @@ export class BrowserHistoryAnalyzer {
     const topSites = Array.from(siteMap.values())
       .sort((a, b) => b.visitCount - a.visitCount)
       .slice(0, 20)
+    console.log('✅ Top sites analyzed:', topSites.length, 'sites')
 
     // Analyze sessions
+    console.log('🔍 Starting session analysis...')
     const sessions = this.groupVisitsBySession(this.visits)
+    console.log('✅ Sessions analyzed:', sessions.length, 'sessions')
 
     // Daily activity
+    console.log('🔍 Starting daily activity analysis...')
     const dailyMap = new Map<string, { visits: number; duration: number }>()
     this.visits.forEach(visit => {
       if (!visit.timestamp || visit.timestamp <= 0) {
@@ -644,6 +689,10 @@ export class BrowserHistoryAnalyzer {
     const dailyActivity = Array.from(dailyMap.entries())
       .map(([date, stats]) => ({ date, ...stats }))
       .sort((a, b) => a.date.localeCompare(b.date))
+      .filter(activity => {
+        // Filter out invalid dates
+        return activity.date && activity.date !== 'Invalid Date' && activity.visits > 0
+      })
       
     console.log('📊 Daily activity generated:', dailyActivity.length, 'entries')
     console.log('📊 Sample daily activity:', dailyActivity.slice(0, 5))
@@ -654,6 +703,7 @@ export class BrowserHistoryAnalyzer {
     })
 
     // Hourly activity
+    console.log('🔍 Starting hourly activity analysis...')
     const hourlyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
       if (!visit.timestamp || visit.timestamp <= 0) return
@@ -689,6 +739,7 @@ export class BrowserHistoryAnalyzer {
     console.log('📊 Total hourly visits:', hourlyActivity.reduce((sum, h) => sum + h.visits, 0))
 
     // Weekly pattern
+    console.log('🔍 Starting weekly pattern analysis...')
     const weeklyMap = new Map<number, { visits: number; totalDuration: number }>()
     this.visits.forEach(visit => {
       if (!visit.timestamp || visit.timestamp <= 0) return
@@ -716,6 +767,7 @@ export class BrowserHistoryAnalyzer {
     console.log('📊 Weekly pattern generated:', weeklyPattern.filter(w => w.visits > 0))
 
     // New time-based analyses
+    console.log('🔍 Starting advanced time-based analyses...')
     const timeBasedUrls = this.analyzeTimeBasedUrls()
     const hourlyUrlDistribution = this.analyzeHourlyUrlDistribution()
     const browsingSessions = this.analyzeBrowsingSessionsOverTime()
@@ -730,6 +782,7 @@ export class BrowserHistoryAnalyzer {
       { typedCount: 0, url: 'None' }
     ).url
 
+    console.log('🔍 Compiling final results...')
     const result = {
       topDomains,
       topSites,
@@ -749,6 +802,7 @@ export class BrowserHistoryAnalyzer {
       }
     }
     
+    console.log('✅ === ANALYSIS COMPLETE ===')
     console.log('✅ Final analysis result summary:', {
       dailyActivityCount: result.dailyActivity.length,
       hourlyActivityCount: result.hourlyActivity.length,

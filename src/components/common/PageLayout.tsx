@@ -272,112 +272,72 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               )}
             </div>
           )}
-          
-          {/* Show upload options when no data exists - for browser history page specifically */}
-          {!hasAnyData && pageId === 'browserHistory' && (
-            <div className={cn(
-              "flex items-center gap-3 transition-all duration-300 ease-in-out",
-              isTransitioning && "opacity-50 transform translate-x-4"
-            )}>
-              {/* Browser data upload - primary */}
-              <div 
-                className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-all duration-200 hover:scale-105"
-                onClick={handleShowUpload}
-                title="Click to upload browser history data"
-              >
-                <Database className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                  Upload Browser Data
-                </span>
-                <Badge variant="outline" className="text-xs text-blue-600">
-                  Required
-                </Badge>
-              </div>
-              
-              {/* Device data upload - secondary */}
-              <div 
-                className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-all duration-200 hover:scale-105"
-                onClick={handleShowUpload}
-                title="Click to upload device data for enhanced analysis"
-              >
-                <Smartphone className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                  Upload Device Data
-                </span>
-                <Badge variant="outline" className="text-xs text-yellow-600">
-                  Optional
-                </Badge>
-              </div>
-            </div>
-          )}
         </div>
         
         <p className="text-muted-foreground text-lg mb-4">{description}</p>
       </div>
 
-      {!hasAnyData || showUpload ? (
+      {/* Always show upload interface when no data exists, or when showUpload is true */}
+      {(!hasAnyData || showUpload) ? (
         <div className={cn(
           "space-y-6 transition-all duration-500 ease-in-out",
-          showUpload ? "opacity-100 transform translate-y-0" : "opacity-100 transform translate-y-0",
+          (!hasAnyData || showUpload) ? "opacity-100 transform translate-y-0" : "opacity-100 transform translate-y-0",
           isTransitioning && !showUpload && "opacity-0 transform translate-y-4"
         )}>
-          {/* Show upload interface directly when no data exists or when showUpload is true */}
-          {(!hasAnyData || showUpload) && (
-            <div className={cn(
-              "transition-all duration-500 ease-in-out",
-              (!hasAnyData || showUpload) ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
-            )}>
-              <DropZone 
-                pageId={pageId}
-                customTitle={pageId === 'browserHistory' ? 'Upload Browser History Data' : undefined}
-                customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
-              />
-              {additionalUpload}
-              
-              {/* Compact info panel below upload */}
-              {!hasAnyData && (
-                <div className="mt-6 p-4 bg-muted/30 border border-muted rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Accepted formats */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Database className="h-3 w-3 text-muted-foreground" />
-                        <h4 className="text-sm font-medium text-muted-foreground">Accepted Formats</h4>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {acceptedFormats.map((format) => (
-                          <Badge key={format} variant="outline" className="text-xs h-5">
-                            {format}
-                          </Badge>
-                        ))}
-                      </div>
+          <div className={cn(
+            "transition-all duration-500 ease-in-out",
+            (!hasAnyData || showUpload) ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8"
+          )}>
+            <DropZone 
+              pageId={pageId}
+              customTitle={pageId === 'browserHistory' ? 'Upload Browser History Data' : undefined}
+              customDescription={pageId === 'browserHistory' ? 'Upload your browser history file first, then optionally add device information below for enhanced device-wise analysis.' : undefined}
+            />
+            {additionalUpload}
+            
+            {/* Compact info panel below upload */}
+            {!hasAnyData && (
+              <div className="mt-6 p-4 bg-muted/30 border border-muted rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Accepted formats */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Database className="h-3 w-3 text-muted-foreground" />
+                      <h4 className="text-sm font-medium text-muted-foreground">Accepted Formats</h4>
                     </div>
-                    
-                    {/* Data examples */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="h-3 w-3 text-muted-foreground" />
-                        <h4 className="text-sm font-medium text-muted-foreground">Data Examples</h4>
-                      </div>
-                      <ul className="space-y-0.5">
-                        {examples.slice(0, 2).map((example, index) => (
-                          <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
-                            <span className="w-1 h-1 bg-muted-foreground rounded-full mt-1.5 flex-shrink-0" />
-                            <span>{example}</span>
-                          </li>
-                        ))}
-                        {examples.length > 2 && (
-                          <li className="text-xs text-muted-foreground/70 italic">
-                            +{examples.length - 2} more formats supported
-                          </li>
-                        )}
-                      </ul>
+                    <div className="flex flex-wrap gap-1">
+                      {acceptedFormats.map((format) => (
+                        <Badge key={format} variant="outline" className="text-xs h-5">
+                          {format}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
+                  
+                  {/* Data examples */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="h-3 w-3 text-muted-foreground" />
+                      <h4 className="text-sm font-medium text-muted-foreground">Data Examples</h4>
+                    </div>
+                    <ul className="space-y-0.5">
+                      {examples.slice(0, 2).map((example, index) => (
+                        <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="w-1 h-1 bg-muted-foreground rounded-full mt-1.5 flex-shrink-0" />
+                          <span>{example}</span>
+                        </li>
+                      ))}
+                      {examples.length > 2 && (
+                        <li className="text-xs text-muted-foreground/70 italic">
+                          +{examples.length - 2} more formats supported
+                        </li>
+                      )}
+                    </ul>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         // Show charts when data exists and not in upload mode
