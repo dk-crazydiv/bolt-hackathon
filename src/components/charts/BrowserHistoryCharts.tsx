@@ -295,11 +295,72 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>🕐 Browser Usage Timeline</CardTitle>
+              <CardDescription>Complete timeline showing browser usage frequency over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {analytics.dailyActivity && analytics.dailyActivity.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={analytics.dailyActivity}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => {
+                        const date = new Date(value)
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      }}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      label={{ value: 'Browser Sessions', angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip 
+                      labelFormatter={(value) => {
+                        const date = new Date(value)
+                        return `Date: ${date.toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}`
+                      }}
+                      formatter={(value, name) => [
+                        `${value} ${name === 'visits' ? 'browser sessions' : name}`,
+                        'Usage Count'
+                      ]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="visits"
+                      stroke="#3b82f6"
+                      fill="#3b82f6"
+                      fillOpacity={0.3}
+                      strokeWidth={2}
+                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                      activeDot={{ r: 5, stroke: '#3b82f6', strokeWidth: 2 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  <div className="text-center">
+                    <Clock className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-sm">No timeline data available</p>
+                    <p className="text-xs">Upload browser history data to see usage timeline</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>📈 Daily Browsing Activity</CardTitle>
-                <CardDescription>Your browsing activity over time</CardDescription>
+                <CardTitle>📈 Recent Daily Activity</CardTitle>
+                <CardDescription>Your browsing activity over the last 30 days</CardDescription>
               </CardHeader>
               <CardContent>
                 {analytics.dailyActivity && analytics.dailyActivity.length > 0 ? (
