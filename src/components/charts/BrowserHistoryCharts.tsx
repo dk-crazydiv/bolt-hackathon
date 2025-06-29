@@ -453,8 +453,8 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                {/* Enhanced error state for timeline */}
                 <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  {/* Enhanced error state for timeline */}
                   <div className="text-center">
                     <Clock className="h-8 w-8 mx-auto mb-2" />
                     <p className="text-sm">No timeline data available</p>
