@@ -454,21 +454,21 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 </ResponsiveContainer>
               ) : (
                 <div className="text-center">
-                  {/* Enhanced error state for timeline */}
-                  {/* Enhanced error state */}
-                  <Clock className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-sm">No timeline data available</p>
-                  <p className="text-xs">
-                    {analytics?.totalStats?.totalVisits > 0 
-                      ? 'Processing timeline data...' 
-                      : 'Upload browser history data to see usage timeline'
-                    }
-                  </p>
-                  {analytics?.dailyActivity && (
-                    <p className="text-xs mt-2 text-blue-600">
-                      Debug: Found {analytics.dailyActivity.length} daily entries
+                  <div className="text-center">
+                    <Clock className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-sm">No timeline data available</p>
+                    <p className="text-xs">
+                      {analytics?.totalStats?.totalVisits > 0 
+                        ? 'Processing timeline data...' 
+                        : 'Upload browser history data to see usage timeline'
+                      }
                     </p>
-                  )}
+                    {analytics?.dailyActivity && (
+                      <p className="text-xs mt-2 text-blue-600">
+                        Debug: Found {analytics.dailyActivity.length} daily entries
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -503,15 +503,13 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                   </AreaChart>
                 </ResponsiveContainer>
                 ) : (
-                  {/* Enhanced error state */}
                   <div className="flex items-center justify-center h-[250px] text-muted-foreground">
                     <div className="text-center">
                       <BarChart3 className="h-8 w-8 mx-auto mb-2" />
                       <p className="text-sm">No daily activity data available</p>
                       <p className="text-xs">Data: {analytics.dailyActivity?.length || 0} days</p>
                     </div>
-                  <div className="text-center">
-                </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -539,7 +537,6 @@ export default function BrowserHistoryCharts({ analytics: propAnalytics }: Brows
                 </ResponsiveContainer>
                 ) : (
                   <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                    {/* Enhanced error state */}
                     <div className="text-center">
                       <Clock className="h-8 w-8 mx-auto mb-2" />
                       <p className="text-sm">No hourly activity data available</p>
